@@ -1,0 +1,11 @@
+[
+    {
+        "ProjectName":  "Healthcare-CIMA_PM_Web_Projects",
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CIMA_PM_Web_Projects/CHCPM_Reporting",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ]
+    }
+]

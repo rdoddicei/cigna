@@ -1,0 +1,1304 @@
+[
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CIMA_PM_Web_Projects",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CIMA_PM_Web_Projects",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-VISTA",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-VISTA",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "Cigna.CCP.CDB.UI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CCP.CDB.API",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "CoreOps-CCP-CDB",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "IBM.MQ",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "CensusManager",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-CensusManager",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-XO1_AMI",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-XO1_AMI",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-STLPORTAL",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-STLPORTAL",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-SelSegCM",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-SelSegCM",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Specialty-NYLSQL",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Specialty-NYLSQL",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CRP",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CRP",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-EXPENSE_WEB_PORTAL",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-EXPENSE_WEB_PORTAL",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "Git-SICR",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "GIT-BCIP",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "git-bcip-new",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Git-SOA",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "GIT-SOARTD",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "git-soa-new",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Git-Gadget",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-Finance_IT",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "BIA-Bookies",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "BIA-Bookies",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/CoreOps-VBS-THNME",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "CoreOps-VBS-THNME",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/CCP-GDD_OTIR_WEB",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "CCP-GDD_OTIR_WEB",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "International-CGHB_BART",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "International-CGHB_BART",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-ARCHER",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-ARCHER",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/International-CIEB_TTPRO",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "International-CIEB_TTPRO",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "onbase-api-wrapper",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "onbase-dll-testing",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "csb-dll",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "csb-gov-broker-csb-api-LifeProWS",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-CSB",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "HCP-GSP-EOCActionable",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "HCP-GSP-EOCActionable",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Group-IWF_BCSC",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Group-IWF_BCSC",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Group-CGI_PORTAL_IT",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Group-CGI_PORTAL_IT",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-BUS_AUTO",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-BUS_AUTO",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CSB_Print",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CSB_Print",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "Enterprise-TMC",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "Enterprise-TMC",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-xRX",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-xRX",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-MEMBOB",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-MEMBOB",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "NUnitTest",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "Enterprise-ALMProductsSandbox",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "WORM",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "CoreOps-VBS-THNME-WEB",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-HZD_DEFINEDCARE",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-HZD_DEFINEDCARE",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Group-CGI_DISABILITY_WEB_INTAKE",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Group-CGI_DISABILITY_WEB_INTAKE",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-GLGGMI",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-GLGGMI",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CIMA_PM_SAS_Projects",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CIMA_PM_SAS_Projects",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-W5P_PRICING",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-W5P_PRICING",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-DocGen",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-DocGen",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Specialty-NYLSSRS",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Specialty-NYLSSRS",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/International-CIEB_ARCHIVES",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "International-CIEB_ARCHIVES",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "world",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "International-CIEB_WORLDCARE",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "PMHSGITREPO",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "CoreOps-CoreSol-PMHSGUI",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CDB_Annex",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CDB_Annex",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-QET_DAL",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-QET_DAL",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-ePro BST Cheatsheet",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-ePro BST Cheatsheet",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-TDS",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-TDS",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-CMDB",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-CMDB",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "onbase-api-wrapper",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-CSB_ OnBase",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CSB_OCR",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CSB_OCR",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-Test2",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-Test2",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/International-CGHB_Einstein",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "International-CGHB_Einstein",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-CSB",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-CSB",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-WORKFLOW_UTILITIES",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-WORKFLOW_UTILITIES",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-IISWRS",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-IISWRS",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-LEGACYHRA",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-LEGACYHRA",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-VCS_ECOMMPROD",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-VCS_ECOMMPROD",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "Velocity",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "GEM",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-OETDApps",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CAEDS",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CAEDS",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/International-CIEB_REPORTING",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "International-CIEB_REPORTING",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "IM-ClientVertical-CAP_WEB_ENABLE",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "IM-ClientVertical-CAP_WEB_ENABLE",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Group-CGI_DARTS",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Group-CGI_DARTS",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCEE.Router",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.DWB.APCASC_Load",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCEE.C3UI_FTA_App",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.ReportsApp",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.CXTNAutomation_6.1",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCEE.DWB_1.0",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLCMCCE.ORA_DML_Deployment",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.DWB.ClaimsInquiry",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.QCareWrapperService",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.QERegressionDataload",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.ContentManagerAutomation",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.MUEAPI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.ReportsApp.Web",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.MonthlyDictionary.Changes",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCEE.Ccsf_ProcCodes",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.DailyReportADAPPT",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.APCASC_DWB_DataLoad",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.DWB_ConfigMoveWebApp",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.Purge_App",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.Purge_UI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CoreOps.VBS.CLMCCE.ReportsAppUI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna-CoreOps-VBS-CLMCEE-Router-1.0",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CLMCCE.FacetsDWB.Service",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-CLMCCE",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Group-HEALTHWISE",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Group-HEALTHWISE",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-B1S_STND_MED_CD",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-B1S_STND_MED_CD",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-MARS",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-MARS",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-HRARepository",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-HRARepository",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-MassDist",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-MassDist",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CSB_App_Finance",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CSB_App_Finance",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-SUWASGServices",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-SUWASGServices",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/International-CIEB_IMAGING",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "International-CIEB_IMAGING",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-TMC-TFVC-Test",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-TMC-TFVC-Test",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CIMA_Intake_Database",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CIMA_Intake_Database",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-SpecialInvestigations",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-SpecialInvestigations",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "DevOpsAnalytics",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "vm-api",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "vm-actions",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "vm-client",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "vm-sql",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "cloud_cop",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Enterprise-EQA",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CSB_App_New_Business",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CSB_App_New_Business",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-BCA_DenAdmin",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-BCA_DenAdmin",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-LCRS",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-LCRS",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CCS_ELIGIBILITY_ACE",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CCS_ELIGIBILITY_ACE",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-EITRT",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-EITRT",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-MHParityTool",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-MHParityTool",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-ALMProducts",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-ALMProducts",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Group-GroupIT",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Group-GroupIT",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "E2E-ERVTNNextGen",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "Enterprise-FinanceE2EAutomation",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "Cigna.CBH.ClaimImageSearch.API",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.ClaimImageSearch.WebClient",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.OLAM.API",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.OLAM.UI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.Dashboard.UI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.AutomatedSurvey.UI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.ResourceNet.UI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.THN.API",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.Performance.UI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.IntegratedReferral.UI",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.CBH.OnlineForms.UI",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Specialty-CBH_ClaimsImage",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "Cigna.Claim.PrePricingNetwork.Webclient",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.Claim.PrePricingNetwork.Services",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.PrePricing.UITests",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.Prepricing.ARTTests",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-PrePricingNetwork",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-Tier_1",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-Tier_1",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "Cigna.AAPS.EditEngine.Rules.Proclaim.Prepay",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "Cigna.AAPS.EditEngine.Rules.Prepay",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-CostContainment",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Group-CGI_IMAGINGWORKFLOW",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Group-CGI_IMAGINGWORKFLOW",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-Top60eProMacro",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-Top60eProMacro",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "ml-chatbot-masking-intake",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-RDR",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-Shared",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-Shared",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CDB_Security",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CDB_Security",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Specialty-NYLDASHBOARD",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Specialty-NYLDASHBOARD",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "DPAS-Test",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-Treasury",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-ADVICE",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-ADVICE",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-Test1",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-Test1",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "indigo-anteater",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "green-anteater",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "mango-possum15",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "belles-bell",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "test-repo",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "GITHUB-CORE-MIGRATION-DEV",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-Cont_Qual_Improvement",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-Cont_Qual_Improvement",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "ART-HealthCare",
+                                 "RepositoryType":  "Git"
+                             },
+                             {
+                                 "RepositoryName":  "ART-GIT",
+                                 "RepositoryType":  "Git"
+                             }
+                         ],
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-ART",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-CCS_SRT",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-CCS_SRT",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "TSG OPS-SmartAlec",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "TSG OPS-SmartAlec",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Healthcare-MUW",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Healthcare-MUW",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  {
+                             "RepositoryName":  "AZ-DEV-Passport-Test",
+                             "RepositoryType":  "Git"
+                         },
+        "ProjectType":  "Git",
+        "ProjectName":  "Healthcare-CMG_COH_AZ",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    },
+    {
+        "Repositories":  [
+                             {
+                                 "RepositoryName":  "$/Enterprise-GEPR_PORTICO",
+                                 "RepositoryType":  "TFVC"
+                             }
+                         ],
+        "ProjectType":  "TFVC",
+        "ProjectName":  "Enterprise-GEPR_PORTICO",
+        "CollectionUrl":  "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+    }
+]

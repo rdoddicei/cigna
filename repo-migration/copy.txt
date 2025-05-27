@@ -1,112 +1,12 @@
-param(
-    [Parameter(Mandatory = $true)] [string]$TfsUrl,
-    [Parameter(Mandatory = $true)] [string]$GitHubOrg,
-    [Parameter(Mandatory = $true)] [string]$JsonFilePath
-)
-
-# Read tokens from environment variables
-$TfsToken = $env:TFS_TOKEN
-$GitHubToken = $env:GITHUB_TOKEN
-
-if (-not $TfsToken) { throw "Environment variable TFS_TOKEN is not set." }
-if (-not $GitHubToken) { throw "Environment variable GITHUB_TOKEN is not set." }
-
-# Set working directory
-$workingDir = Join-Path -Path $PWD -ChildPath "repo"
-New-Item -ItemType Directory -Force -Path $workingDir | Out-Null
-
-Write-Host "=== Starting migration using input file: $JsonFilePath ==="
-
-# Validate and parse JSON
-if (-not (Test-Path $JsonFilePath)) {
-    throw "JSON file not found at path: $JsonFilePath"
-}
-$jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
-
-foreach ($project in $jsonContent.projects) {
-    $projectName = $project.projectName
-    Write-Host "`n--- Processing project: $projectName ---"
-
-    foreach ($repo in $project.repositories) {
-        $repoName = $repo.name
-        $repoType = $repo.type.ToUpper()
-        $tfvcPath = "$/$projectName/$repoName"
-        $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
-
-        Write-Host "`n>>> Starting migration for repository: $repoName"
-        Write-Host "Repository Type: $repoType"
-        Write-Host "Local Working Directory: $localRepoPath"
-
-        # Step 1: Create GitHub repository
-        Write-Host "`n[Step 1] Creating GitHub repository: $repoName"
-
-        $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
-        $repoBody = @{
-            name      = $repoName
-            private   = $true
-            auto_init = $false
-        } | ConvertTo-Json -Depth 3
-
-        $headers = @{
-            Authorization = "token $GitHubToken"
-            Accept        = "application/vnd.github.v3+json"
-            "User-Agent"  = "PowerShell-Script"
-        }
-
-        try {
-            $response = Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody -ErrorAction Stop
-            Write-Host "[SUCCESS] GitHub repository created: $repoName"
-        } catch {
-            $statusCode = $_.Exception.Response.StatusCode.Value__
-            $streamReader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
-            $responseBody = $streamReader.ReadToEnd()
-            Write-Warning "[ERROR] Failed to create GitHub repo: $repoName"
-            Write-Host "Status Code: $statusCode"
-            Write-Host "Response Body: $responseBody"
-            Write-Host "[SKIPPED] Skipping migration for: $repoName"
-            continue
-        }
-
-        # Step 2: Clone and migrate the repo
-        if ($repoType -eq "TFVC") {
-            Write-Host "`n[Step 2] Cloning TFVC repository: $tfvcPath"
-
-            if (Test-Path $localRepoPath) {
-                Remove-Item -Recurse -Force -Path $localRepoPath
-                Write-Host "Deleted existing local directory: $localRepoPath"
-            }
-
-            $cloneCmd = "git tfs clone --username user --password *** $TfsUrl $tfvcPath $localRepoPath"
-            Write-Host "Running: git tfs clone ..."
-            $cloneResult = & git tfs clone --username user --password $TfsToken $TfsUrl $tfvcPath $localRepoPath
-
-            if ($LASTEXITCODE -ne 0) {
-                Write-Warning "[ERROR] git-tfs clone failed for: $repoName"
-                continue
-            }
-
-            Write-Host "[SUCCESS] TFVC repository cloned to: $localRepoPath"
-
-            Write-Host "`n[Step 3] Pushing to GitHub: $repoName"
-            Set-Location -Path $localRepoPath
-            git remote add origin "https://$GitHubToken@github.com/$GitHubOrg/$repoName.git"
-            git push origin --all
-            git push origin --tags
-            Set-Location -Path $workingDir
-
-            Write-Host "[SUCCESS] Repository pushed to GitHub: $repoName"
-
-            Remove-Item -Recurse -Force -Path $localRepoPath
-            Write-Host "Cleaned up local directory: $localRepoPath"
-
-        } elseif ($repoType -eq "GIT") {
-            Write-Warning "[INFO] Git repository migration not implemented for: $repoName"
-        } else {
-            Write-Warning "[WARNING] Unknown repository type: $repoType"
-        }
-
-        Write-Host ">>> Completed migration for repository: $repoName"
-    }
-}
-
-Write-Host "`n=== Migration completed for all projects ==="
+Run Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+  Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
+  ./repo-migration/tfvc-to-github.ps1 -TfsUrl "https://tfs.sys.cigna.com/tfs/DefaultCollection" `
+                      -GitHubOrg "cigna-group-infrastructure-services" `
+                      -JsonFilePath "./repo-migration/projectRepoDetailsTFS2017.json"
+  shell: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". '{0}'"
+  env:
+    TFS_TOKEN: ***
+    GITHUB_TOKEN: ***
+  
+=== Starting migration using input file: ./repo-migration/projectRepoDetailsTFS2017.json ===
+=== Migration completed for all projects ===

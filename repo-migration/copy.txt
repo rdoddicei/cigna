@@ -1,147 +1,87 @@
-# Configuration and Environment Setup
-$tfsPat = $env:TFS_PAT
-$githubPat = $env:GITHUB_PAT
-
-if (-not $tfsPat -or -not $githubPat) {
-    Write-Error "Environment variables TFS_PAT and GITHUB_PAT must be set."
-    exit 1
-}
-
-$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("user:$tfsPat"))
-
-$organization = "https://tfs.sys.cigna.com/tfs/DefaultCollection"
-$destinationOrg = "cigna-group-infrastructure-services"
-$workspaceRoot = "$env:GITHUB_WORKSPACE\temp_migration"
-$logFile = Join-Path $workspaceRoot "conversionlog.txt"
-
-[System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", $tfsPat, [System.EnvironmentVariableTarget]::User)
-git config --global http.sslVerify false
-
-if (-not (Test-Path $workspaceRoot)) {
-    New-Item -Path $workspaceRoot -ItemType Directory | Out-Null
-}
-
-# Load Mapping JSON
-$projectJsonPath = "$env:GITHUB_WORKSPACE\repo-migration\projectRepoDetailsTFS2017.json"
-if (-not (Test-Path $projectJsonPath)) {
-    Write-Error "JSON file not found at: $projectJsonPath"
-    exit 1
-}
-$projectData = Get-Content -Raw $projectJsonPath | ConvertFrom-Json
-
-# Logging Function
-function Log {
-    param([string]$message)
-    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
-    $logMessage = "$timestamp - $message"
-    Write-Host $logMessage
-    Add-Content -Path $logFile -Value $logMessage
-}
-
-# GitHub Repo Creation Function
-function Create-GitHubRepo {
-    param([string]$repoName)
-
-    $url = "https://api.github.com/orgs/$destinationOrg/repos"
-    $headers = @{
-        Authorization = "token $githubPat"
-        "User-Agent"  = "TFVC-Migration-Script"
-        Accept        = "application/vnd.github+json"
-    }
-
-    $body = @{
-        name        = $repoName
-        visibility  = "internal"
-        description = "Migrated from TFS TFVC: $repoName"
-    } | ConvertTo-Json -Depth 3
-
-    try {
-        Log "Creating GitHub repo: $repoName"
-        Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Body $body -ErrorAction Stop | Out-Null
-        Log "Created GitHub repo: $repoName"
-        return $true
-    } catch {
-        $statusCode = $_.Exception.Response.StatusCode.Value__
-        $responseBody = (New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())).ReadToEnd()
-        Log "GitHub repo creation failed: $repoName - Status: $statusCode - $responseBody"
-
-        if ($statusCode -eq 422 -and $responseBody -match "already exists") {
-            Log "Repo $repoName already exists. Continuing..."
-            return $true
-        }
-
-        return $false
-    }
-}
-
-# Main Migration Loop
-foreach ($project in $projectData) {
-    if (-not $project -or -not $project.ProjectName) {
-        Log "Skipping invalid project entry"
-        continue
-    }
-
-    $projectName = $project.ProjectName.Trim()
-    Log "Starting migration for project: $projectName"
-
-    foreach ($repo in $project.Repositories) {
-        if ($repo.RepositoryType -ne "TFVC") {
-            Log "Skipping non-TFVC repo: $($repo.RepositoryName)"
-            continue
-        }
-
-        $tfvcPath = $repo.RepositoryName
-        $repoNameRaw = ($tfvcPath -split '/')[-1] -replace '[^\w\-]', '-'
-        $repoPath = Join-Path $workspaceRoot $repoNameRaw
-        Log "TFVC Path: $tfvcPath => Git Repo Name: $repoNameRaw"
-
-        Log "Current Working Directory: $PWD"
-
-        if (-not (Create-GitHubRepo -repoName $repoNameRaw)) {
-            Log "Skipping repo due to GitHub creation failure: $repoNameRaw"
-            continue
-        }
-
-        if (Test-Path $repoPath) {
-            Remove-Item -Recurse -Force $repoPath
-            Log "Removed existing directory: $repoPath"
-        }
-
-        Log "Cloning TFVC repo using git-tfs"
-        $cloneCommand = "git tfs clone $organization `"$tfvcPath`" `"$repoPath`" --branches=auto --username=PersonalAccessToken --password=$tfsPat --no-ssl-verify"
-        Log "Command: $cloneCommand"
-
-        & cmd /c $cloneCommand | Tee-Object -Variable output | Out-Null
-        $output | ForEach-Object { Log $_ }
-
-        if (-not (Test-Path (Join-Path $repoPath ".git"))) {
-            Log ".git not found at $repoPath. Clone may have failed."
-            continue
-        }
-
-        Push-Location $repoPath
-
-        if (git remote | Select-String -Pattern "^origin$") {
-            git remote remove origin
-            Log "Removed existing origin"
-        }
-
-        $remoteUrl = "https://$githubPat@github.com/$destinationOrg/$repoNameRaw.git"
-        git remote add origin $remoteUrl
-        Log "Added GitHub remote: $remoteUrl"
-
-        Log "Pushing code to GitHub"
-        git push -u origin --all
-        git push origin --tags
-
-        Log "Running git tfs cleanup"
-        git tfs cleanup
-
-        Pop-Location
-
-        Remove-Item -Recurse -Force $repoPath
-        Log "Deleted local repo directory: $repoPath"
-    }
-}
-
-Log "All migrations completed successfully."
+Run $env:TFS_PAT = "***"
+  
+2025-05-27 11:40:59 - Starting migration for project: Healthcare-VISTA
+2025-05-27 11:41:00 - TFVC Path: $/Healthcare-VISTA/ES => Git Repo Name: ES
+2025-05-27 11:41:00 - Current Working Directory: E:\actions-runner-org-level\_work\tfs-migration\tfs-migration
+2025-05-27 11:41:00 - Creating GitHub repo: ES
+2025-05-27 11:41:01 - Created GitHub repo: ES
+2025-05-27 11:41:01 - Cloning TFVC repo using git-tfs
+2025-05-27 11:41:01 - Command: git tfs clone https://tfs.sys.cigna.com/tfs/DefaultCollection "$/Healthcare-VISTA/ES" "E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\temp_migration\ES" --branches=auto --username=PersonalAccessToken --*** --no-ssl-verify
+2025-05-27 11:41:02 - Found matching Visual Studio version at E:\Program Files\Microsoft Visual Studio\2022\Professional
+2025-05-27 11:41:02 - Usage: git-tfs clone [options] tfs-url-or-instance-name repository-path <git-repository-path>
+2025-05-27 11:41:02 -   ex : git tfs clone http://myTfsServer:8080/tfs/TfsRepository $/ProjectName/ProjectBranch
+2025-05-27 11:41:02 - 
+2025-05-27 11:41:02 -   -h, -H, --help             
+2025-05-27 11:41:02 -   -V, --version              
+2025-05-27 11:41:02 -   -d, --debug                Show debug output about everything git-tfs does
+2025-05-27 11:41:02 -   -i, --tfs-remote, --remote, --id=VALUE
+2025-05-27 11:41:02 -                              The remote ID of the TFS to interact with
+2025-05-27 11:41:02 -                                default: default
+2025-05-27 11:41:02 -   -A, --authors=VALUE        Path to an Authors file to map TFS users to Git 
+2025-05-27 11:41:02 -                                users (will be kept in cache and used for all 
+2025-05-27 11:41:02 -                                the following commands)
+2025-05-27 11:41:02 -       --template=VALUE       Passed to git-init
+2025-05-27 11:41:02 -       --shared[=VALUE]       Passed to git-init
+2025-05-27 11:41:02 -       --initial-branch=VALUE Passed to git-init (requires Git >= 2.28.0)
+2025-05-27 11:41:02 -       --autocrlf=VALUE       Normalize line endings (default: false)
+2025-05-27 11:41:02 -       --ignorecase=VALUE     Ignore case in file paths (default: system 
+2025-05-27 11:41:02 -                                default)
+2025-05-27 11:41:02 -       --bare                 Clone the TFS repository in a bare git repository
+2025-05-27 11:41:02 -       --workspace=VALUE      Set tfs workspace to a specific folder (a 
+2025-05-27 11:41:02 -                                shorter path is better!)
+2025-05-27 11:41:02 -       --ignore-regex=VALUE   A regex of files to ignore
+2025-05-27 11:41:02 -       --except-regex=VALUE   A regex of exceptions to '--ignore-regex'
+2025-05-27 11:41:02 -       --gitignore[=VALUE]    Use .gitignore to ignore files on download from 
+2025-05-27 11:41:02 -                                TFS. Alternatively, provide path toward the-
+2025-05-27 11:41:02 -                                 .gitignore file which will be used to ignore 
+2025-05-27 11:41:02 -                                files
+2025-05-27 11:41:02 -       --no-gitignore         Do not use .gitignore to ignore files on 
+2025-05-27 11:41:02 -                                download from TFS
+2025-05-27 11:41:02 -   -u, --username=VALUE       TFS username
+2025-05-27 11:41:02 -   -p, --***       TFS password
+2025-05-27 11:41:02 -       --no-parallel          Do not do parallel requests to TFS
+2025-05-27 11:41:02 -       --all, --fetch-all     Fetch TFS changesets of all the initialized tfs 
+2025-05-27 11:41:02 -                                remotes
+2025-05-27 11:41:02 -       --parents              Fetch TFS changesets of the parent(s) 
+2025-05-27 11:41:02 -                                initialized tfs remotes
+2025-05-27 11:41:02 -   -l, --with-labels, --fetch-labels
+2025-05-27 11:41:02 -                              Fetch the labels also when fetching TFS 
+2025-05-27 11:41:02 -                                changesets
+2025-05-27 11:41:02 -   -b, --bare-branch=VALUE    The name of the branch on which the fetch will 
+2025-05-27 11:41:02 -                                be done for a bare repository
+2025-05-27 11:41:02 -       --force                Force fetch of tfs changesets when there is 
+2025-05-27 11:41:02 -                                ahead commits (ahead commits will be lost!)
+2025-05-27 11:41:02 -   -x, --export               Export metadata
+2025-05-27 11:41:02 -       --export-work-item-mapping=VALUE
+2025-05-27 11:41:02 -                              Path to Work-items mapping export file
+2025-05-27 11:41:02 -       --branches=VALUE       Strategy to manage branches:
+2025-05-27 11:41:02 - 
+2025-05-27 11:41:02 -                                * auto:(default) Manage the encountered merged 
+2025-05-27 11:41:02 -                                changesets and initialize only the merged 
+2025-05-27 11:41:02 -                                branches
+2025-05-27 11:41:02 - 
+2025-05-27 11:41:02 -                                * none: Ignore branches and merge changesets, 
+2025-05-27 11:41:02 -                                fetching only the cloned tfs path
+2025-05-27 11:41:02 - 
+2025-05-27 11:41:02 -                                * all: Manage merged changesets and initialize 
+2025-05-27 11:41:02 -                                all the branches during the clone
+2025-05-27 11:41:02 -       --batch-size=VALUE     Size of the batch of tfs changesets fetched (-1 
+2025-05-27 11:41:02 -                                for all in one batch)
+2025-05-27 11:41:02 -   -c, --changeset, --from=VALUE
+2025-05-27 11:41:02 -                              The changeset to clone from (must be a number)
+2025-05-27 11:41:02 -   -t, --up-to, --to=VALUE    up-to changeset # (optional, -1 for up to 
+2025-05-27 11:41:02 -                                maximum, must be a number, not prefixed with 'C')
+2025-05-27 11:41:02 -       --ignore-branches-regex=VALUE
+2025-05-27 11:41:02 -                              Don't initialize branches that match given regex
+2025-05-27 11:41:02 -       --ignore-not-init-branches
+2025-05-27 11:41:02 -                              Ignore not-initialized branches
+2025-05-27 11:41:02 -       --ignore-restricted-changesets
+2025-05-27 11:41:02 -                              Ignore restricted changesets
+2025-05-27 11:41:02 -       --resumable            if an error occurred, try to continue when you 
+2025-05-27 11:41:02 -                                restart clone with same parameters
+2025-05-27 11:41:02 - 
+2025-05-27 11:41:02 - 
+2025-05-27 11:41:02 - Find more help in our online help : https://github.com/git-tfs/git-tfs/blob/master/doc/commands/clone.md
+2025-05-27 11:41:02 - .git not found at E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\temp_migration\ES. Clone may have failed.
+2025-05-27 11:41:02 - All migrations completed successfully.
+Error: Process completed with exit code 1.

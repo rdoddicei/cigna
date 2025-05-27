@@ -1,0 +1,76 @@
+2025-05-26 23:42:56 - 
+Processing project: Healthcare-CIMA_PM_Web_Projects
+2025-05-26 23:42:56 - POST https://api.github.com/orgs/cigna-group-infrastructure-services/repos with repo name 'KPGE-AgileSprintsBranchA'
+2025-05-26 23:42:57 - âœ… Created GitHub repo: KPGE-AgileSprintsBranchA
+2025-05-26 23:42:57 - Executing: git tfs clone https://tfs.sys.cigna.com/tfs/DefaultCollection "$/Healthcare-CIMA_PM_Web_Projects/KPGE-AgileSprintsBranchA" "E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\KPGE-AgileSprintsBranchA" --branches=auto --username=PersonalAccessToken --*** --no-ssl-verify
+2025-05-26 23:42:58 - git-tfs output: Found matching Visual Studio version at E:\Program Files\Microsoft Visual Studio\2022\Professional
+Usage: git-tfs clone [options] tfs-url-or-instance-name repository-path <git-repository-path>
+  ex : git tfs clone http://myTfsServer:8080/tfs/TfsRepository $/ProjectName/ProjectBranch
+  -h, -H, --help             
+  -V, --version              
+  -d, --debug                Show debug output about everything git-tfs does
+  -i, --tfs-remote, --remote, --id=VALUE
+                             The remote ID of the TFS to interact with
+                               default: default
+  -A, --authors=VALUE        Path to an Authors file to map TFS users to Git 
+                               users (will be kept in cache and used for all 
+                               the following commands)
+      --template=VALUE       Passed to git-init
+      --shared[=VALUE]       Passed to git-init
+      --initial-branch=VALUE Passed to git-init (requires Git >= 2.28.0)
+      --autocrlf=VALUE       Normalize line endings (default: false)
+      --ignorecase=VALUE     Ignore case in file paths (default: system 
+                               default)
+      --bare                 Clone the TFS repository in a bare git repository
+      --workspace=VALUE      Set tfs workspace to a specific folder (a 
+                               shorter path is better!)
+      --ignore-regex=VALUE   A regex of files to ignore
+      --except-regex=VALUE   A regex of exceptions to '--ignore-regex'
+      --gitignore[=VALUE]    Use .gitignore to ignore files on download from 
+                               TFS. Alternatively, provide path toward the-
+                                .gitignore file which will be used to ignore 
+                               files
+      --no-gitignore         Do not use .gitignore to ignore files on 
+                               download from TFS
+  -u, --username=VALUE       TFS username
+  -p, --***       TFS password
+      --no-parallel          Do not do parallel requests to TFS
+      --all, --fetch-all     Fetch TFS changesets of all the initialized tfs 
+                               remotes
+      --parents              Fetch TFS changesets of the parent(s) 
+                               initialized tfs remotes
+  -l, --with-labels, --fetch-labels
+                             Fetch the labels also when fetching TFS 
+                               changesets
+  -b, --bare-branch=VALUE    The name of the branch on which the fetch will 
+                               be done for a bare repository
+      --force                Force fetch of tfs changesets when there is 
+                               ahead commits (ahead commits will be lost!)
+  -x, --export               Export metadata
+      --export-work-item-mapping=VALUE
+                             Path to Work-items mapping export file
+      --branches=VALUE       Strategy to manage branches:
+                               * auto:(default) Manage the encountered merged 
+                               changesets and initialize only the merged 
+                               branches
+                               * none: Ignore branches and merge changesets, 
+                               fetching only the cloned tfs path
+                               * all: Manage merged changesets and initialize 
+                               all the branches during the clone
+      --batch-size=VALUE     Size of the batch of tfs changesets fetched (-1 
+                               for all in one batch)
+  -c, --changeset, --from=VALUE
+                             The changeset to clone from (must be a number)
+  -t, --up-to, --to=VALUE    up-to changeset # (optional, -1 for up to 
+                               maximum, must be a number, not prefixed with 'C')
+      --ignore-branches-regex=VALUE
+                             Don't initialize branches that match given regex
+      --ignore-not-init-branches
+                             Ignore not-initialized branches
+      --ignore-restricted-changesets
+                             Ignore restricted changesets
+      --resumable            if an error occurred, try to continue when you 
+                               restart clone with same parameters
+Find more help in our online help : https://github.com/git-tfs/git-tfs/blob/master/doc/commands/clone.md
+2025-05-26 23:42:58 - âŒ Clone failed, no .git folder at E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\KPGE-AgileSprintsBranchA
+2025-05-26 23:42:58 - âœ… Migration completed successfully!

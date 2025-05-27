@@ -1,76 +1,175 @@
-2025-05-26 23:42:56 - 
-Processing project: Healthcare-CIMA_PM_Web_Projects
-2025-05-26 23:42:56 - POST https://api.github.com/orgs/cigna-group-infrastructure-services/repos with repo name 'KPGE-AgileSprintsBranchA'
-2025-05-26 23:42:57 - âœ… Created GitHub repo: KPGE-AgileSprintsBranchA
-2025-05-26 23:42:57 - Executing: git tfs clone https://tfs.sys.cigna.com/tfs/DefaultCollection "$/Healthcare-CIMA_PM_Web_Projects/KPGE-AgileSprintsBranchA" "E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\KPGE-AgileSprintsBranchA" --branches=auto --username=PersonalAccessToken --*** --no-ssl-verify
-2025-05-26 23:42:58 - git-tfs output: Found matching Visual Studio version at E:\Program Files\Microsoft Visual Studio\2022\Professional
-Usage: git-tfs clone [options] tfs-url-or-instance-name repository-path <git-repository-path>
-  ex : git tfs clone http://myTfsServer:8080/tfs/TfsRepository $/ProjectName/ProjectBranch
-  -h, -H, --help             
-  -V, --version              
-  -d, --debug                Show debug output about everything git-tfs does
-  -i, --tfs-remote, --remote, --id=VALUE
-                             The remote ID of the TFS to interact with
-                               default: default
-  -A, --authors=VALUE        Path to an Authors file to map TFS users to Git 
-                               users (will be kept in cache and used for all 
-                               the following commands)
-      --template=VALUE       Passed to git-init
-      --shared[=VALUE]       Passed to git-init
-      --initial-branch=VALUE Passed to git-init (requires Git >= 2.28.0)
-      --autocrlf=VALUE       Normalize line endings (default: false)
-      --ignorecase=VALUE     Ignore case in file paths (default: system 
-                               default)
-      --bare                 Clone the TFS repository in a bare git repository
-      --workspace=VALUE      Set tfs workspace to a specific folder (a 
-                               shorter path is better!)
-      --ignore-regex=VALUE   A regex of files to ignore
-      --except-regex=VALUE   A regex of exceptions to '--ignore-regex'
-      --gitignore[=VALUE]    Use .gitignore to ignore files on download from 
-                               TFS. Alternatively, provide path toward the-
-                                .gitignore file which will be used to ignore 
-                               files
-      --no-gitignore         Do not use .gitignore to ignore files on 
-                               download from TFS
-  -u, --username=VALUE       TFS username
-  -p, --***       TFS password
-      --no-parallel          Do not do parallel requests to TFS
-      --all, --fetch-all     Fetch TFS changesets of all the initialized tfs 
-                               remotes
-      --parents              Fetch TFS changesets of the parent(s) 
-                               initialized tfs remotes
-  -l, --with-labels, --fetch-labels
-                             Fetch the labels also when fetching TFS 
-                               changesets
-  -b, --bare-branch=VALUE    The name of the branch on which the fetch will 
-                               be done for a bare repository
-      --force                Force fetch of tfs changesets when there is 
-                               ahead commits (ahead commits will be lost!)
-  -x, --export               Export metadata
-      --export-work-item-mapping=VALUE
-                             Path to Work-items mapping export file
-      --branches=VALUE       Strategy to manage branches:
-                               * auto:(default) Manage the encountered merged 
-                               changesets and initialize only the merged 
-                               branches
-                               * none: Ignore branches and merge changesets, 
-                               fetching only the cloned tfs path
-                               * all: Manage merged changesets and initialize 
-                               all the branches during the clone
-      --batch-size=VALUE     Size of the batch of tfs changesets fetched (-1 
-                               for all in one batch)
-  -c, --changeset, --from=VALUE
-                             The changeset to clone from (must be a number)
-  -t, --up-to, --to=VALUE    up-to changeset # (optional, -1 for up to 
-                               maximum, must be a number, not prefixed with 'C')
-      --ignore-branches-regex=VALUE
-                             Don't initialize branches that match given regex
-      --ignore-not-init-branches
-                             Ignore not-initialized branches
-      --ignore-restricted-changesets
-                             Ignore restricted changesets
-      --resumable            if an error occurred, try to continue when you 
-                               restart clone with same parameters
-Find more help in our online help : https://github.com/git-tfs/git-tfs/blob/master/doc/commands/clone.md
-2025-05-26 23:42:58 - âŒ Clone failed, no .git folder at E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\KPGE-AgileSprintsBranchA
-2025-05-26 23:42:58 - âœ… Migration completed successfully!
+# --------------------------------
+# Configuration and Environment
+# --------------------------------
+$tfsPat = $env:TFS_PAT
+$githubPat = $env:GITHUB_PAT
+
+if (-not $tfsPat -or -not $githubPat) {
+    Write-Error "❌ Environment variables TFS_PAT and GITHUB_PAT must be set."
+    exit 1
+}
+
+$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("user:$tfsPat"))
+
+$organization = "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+$destinationOrg = "cigna-group-infrastructure-services"
+
+# GitHub workspace and working directories
+$workspaceRoot = "$env:GITHUB_WORKSPACE\temp_migration"
+$logFile = Join-Path $workspaceRoot "conversionlog.txt"
+
+# Set environment for git-tfs
+[System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", $tfsPat, [System.EnvironmentVariableTarget]::User)
+git config --global http.sslVerify false
+
+# Create workspace root
+if (-not (Test-Path $workspaceRoot)) {
+    New-Item -Path $workspaceRoot -ItemType Directory | Out-Null
+}
+
+# -------------------------------
+# Load project-repo mapping JSON
+# -------------------------------
+$projectJsonPath = "$env:GITHUB_WORKSPACE\repo-migration\projectRepoDetailsTFS2017.json"
+if (-not (Test-Path $projectJsonPath)) {
+    Write-Error "❌ JSON file not found at: $projectJsonPath"
+    exit 1
+}
+
+$projectData = Get-Content -Raw $projectJsonPath | ConvertFrom-Json
+
+# -------------------------------
+# Log Helper Function
+# -------------------------------
+function Log {
+    param([string]$message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $logMessage = "$timestamp - $message"
+    Write-Host $logMessage
+    Add-Content -Path $logFile -Value $logMessage
+}
+
+# -------------------------------
+# GitHub Repo Creation Function
+# -------------------------------
+function Create-GitHubRepo {
+    param([string]$repoName)
+
+    $url = "https://api.github.com/orgs/$destinationOrg/repos"
+    $headers = @{
+        Authorization = "token $githubPat"
+        "User-Agent"  = "TFVC-Migration-Script"
+        Accept        = "application/vnd.github+json"
+    }
+
+    $body = @{
+        name        = $repoName
+        visibility  = "internal"
+        description = "Migrated from TFS TFVC: $repoName"
+    } | ConvertTo-Json -Depth 3
+
+    try {
+        Log "🔧 Creating GitHub repo: $repoName"
+        Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Body $body -ErrorAction Stop | Out-Null
+        Log "✅ Created GitHub repo: $repoName"
+        return $true
+    } catch {
+        $statusCode = $_.Exception.Response.StatusCode.Value__
+        $responseBody = (New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())).ReadToEnd()
+        Log "❌ GitHub repo creation failed: $repoName - Status: $statusCode - $responseBody"
+
+        if ($statusCode -eq 422 -and $responseBody -match "already exists") {
+            Log "⚠️ Repo $repoName already exists. Continuing..."
+            return $true
+        }
+
+        return $false
+    }
+}
+
+# -------------------------------
+# Main Migration Loop
+# -------------------------------
+foreach ($project in $projectData) {
+    if (-not $project -or -not $project.ProjectName) {
+        Log "⚠️ Skipping invalid project entry"
+        continue
+    }
+
+    $projectName = $project.ProjectName.Trim()
+    Log "`n🚀 Starting migration for project: $projectName"
+
+    foreach ($repo in $project.Repositories) {
+        if ($repo.RepositoryType -ne "TFVC") {
+            Log "⚠️ Skipping non-TFVC repo: $($repo.RepositoryName)"
+            continue
+        }
+
+        $tfvcPath = $repo.RepositoryName
+        $repoNameRaw = ($tfvcPath -split '/')[-1] -replace '[^\w\-]', '-'
+        $repoPath = Join-Path $workspaceRoot $repoNameRaw
+
+        # Create GitHub repo
+        if (-not (Create-GitHubRepo -repoName $repoNameRaw)) {
+            Log "❌ Skipping repo due to GitHub creation failure: $repoNameRaw"
+            continue
+        }
+
+        # Clean old directory
+        if (Test-Path $repoPath) {
+            Remove-Item -Recurse -Force $repoPath
+            Log "🧹 Removed existing directory: $repoPath"
+        }
+
+        # Clone from TFVC using git-tfs
+        New-Item -ItemType Directory -Path $repoPath | Out-Null
+        $gitTfsCmd = "git tfs clone $organization `"$tfvcPath`" `"$repoPath`" --branches=auto --username=PersonalAccessToken --password=$tfsPat --no-ssl-verify"
+        Log "📥 Executing: $gitTfsCmd"
+
+        $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $processInfo.FileName = "cmd.exe"
+        $processInfo.Arguments = "/c $gitTfsCmd"
+        $processInfo.RedirectStandardOutput = $true
+        $processInfo.RedirectStandardError = $true
+        $processInfo.UseShellExecute = $false
+        $processInfo.CreateNoWindow = $true
+
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $processInfo
+        $process.Start() | Out-Null
+        $stdout = $process.StandardOutput.ReadToEnd()
+        $stderr = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+
+        Log "git-tfs output: $stdout"
+        if ($stderr) { Log "git-tfs errors: $stderr" }
+
+        if (-not (Test-Path (Join-Path $repoPath ".git"))) {
+            Log "❌ git-tfs failed, no .git directory at $repoPath"
+            continue
+        }
+
+        # Push to GitHub
+        Push-Location $repoPath
+
+        if (git remote | Select-String -Pattern "^origin$") {
+            git remote remove origin
+            Log "🔄 Removed existing origin"
+        }
+
+        $remoteUrl = "https://$githubPat@github.com/$destinationOrg/$repoNameRaw.git"
+        git remote add origin $remoteUrl
+        Log "🔗 Added origin: $remoteUrl"
+
+        Log "⬆️ Pushing all branches and tags to GitHub..."
+        git push -u origin --all
+        git push origin --tags
+
+        Log "🧹 Running git tfs cleanup"
+        git tfs cleanup
+
+        Pop-Location
+    }
+}
+
+Log "`n✅ All migrations completed successfully!"

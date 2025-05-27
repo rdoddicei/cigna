@@ -1,132 +1,188 @@
-# TFS and GitHub Personal Access Tokens
+# -------------------------------
+# Configuration and Environment
+# -------------------------------
 $tfsPat = $env:TFS_PAT
 $githubPat = $env:GITHUB_PAT
 
-# Encode the TFS PAT for the Authorization header
-$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("user:$tfsPat"))
-
-$organization = "https://tfs.sys.cigna.com/tfs/DefaultCollection"
-$destinationorganization = "cigna-group-infrastructure-services"
-Write-Host "$env:GITHUB_WORKSPACE"
-$ProjectListJsonPath = "$env:GITHUB_WORKSPACE\repo-migration\projectRepoDetailsTFS2017.json" # Replace with correct PATH
-
-# Read and parse the JSON file
-if (-not (Test-Path -Path $ProjectListJsonPath)) {
-    Write-Host "Error: JSON file not found at $ProjectListJsonPath" -ForegroundColor Red
+if (-not $tfsPat -or -not $githubPat) {
+    Write-Error "Environment variables TFS_PAT and GITHUB_PAT must be set."
     exit 1
 }
 
-$projectData = Get-Content -Raw $ProjectListJsonPath | ConvertFrom-Json
-$results = @()
-$downloadedReposFolder = "C:\TempMigration"
+$base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("user:$tfsPat"))
 
-# Set TFS PAT as an environment variable for git-tfs
-[System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", $tfsPat, [System.EnvironmentVariableTarget]::User)
+$organization = "https://tfs.sys.cigna.com/tfs/DefaultCollection"
+$destinationOrg = "cigna-group-infrastructure-services"
+
+$workspaceRoot = "C:\TempMigration"
+
+# Log file path
+$logFile = Join-Path $workspaceRoot "conversionlog.txt"
 
 # Disable SSL verification globally for Git (if necessary)
 git config --global http.sslVerify false
 
-# Create the downloadedtfvcrepos directory if it doesn't exist
-if (-not (Test-Path -Path $downloadedReposFolder)) {
-    New-Item -ItemType Directory -Force -Path $downloadedReposFolder
+# Set TFS PAT environment variable for git-tfs
+[System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", $tfsPat, [System.EnvironmentVariableTarget]::User)
+
+# Ensure workspace root exists
+if (-not (Test-Path -Path $workspaceRoot)) {
+    New-Item -ItemType Directory -Force -Path $workspaceRoot | Out-Null
 }
 
-foreach ($proj in $projectData) {
-    if ($null -eq $proj -or $null -eq $proj.ProjectName) {
-        Write-Host "Skipping invalid project entry: $proj" >> conversionlog.txt
+# -------------------------------
+# Load JSON project-repo mapping
+# -------------------------------
+$projectJsonPath = "$env:GITHUB_WORKSPACE\repo-migration\projectRepoDetailsTFS2017.json"
+
+if (-not (Test-Path -Path $projectJsonPath)) {
+    Write-Error "JSON file not found at $projectJsonPath"
+    exit 1
+}
+
+$projectData = Get-Content -Raw $projectJsonPath | ConvertFrom-Json
+
+# -------------------------------
+# Helper: Log function
+# -------------------------------
+function Log {
+    param([string]$message)
+    $timestamp = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
+    $line = "$timestamp - $message"
+    Write-Host $line
+    Add-Content -Path $logFile -Value $line
+}
+
+# -------------------------------
+# Create GitHub repository
+# -------------------------------
+function Create-GitHubRepo {
+    param([string]$repoName)
+
+    $url = "https://api.github.com/orgs/$destinationOrg/repos"
+
+    $body = @{
+        name        = $repoName
+        visibility  = "internal"
+        description = "Migrated from TFS TFVC: $repoName"
+    } | ConvertTo-Json -Depth 3
+
+    $headers = @{
+        Authorization = "token $githubPat"
+        "User-Agent"  = "TFS-to-GitHub-Migration-Script"
+        Accept        = "application/vnd.github+json"
+        "Content-Type"= "application/json"
+    }
+
+    try {
+        Log "POST $url with repo name '$repoName'"
+        Invoke-RestMethod -Uri $url -Method Post -Headers $headers -Body $body -ErrorAction Stop | Out-Null
+        Log "✅ Created GitHub repo: $repoName"
+        return $true
+    } catch {
+        $statusCode = $_.Exception.Response.StatusCode.Value__
+        $responseStream = $_.Exception.Response.GetResponseStream()
+        $reader = New-Object System.IO.StreamReader($responseStream)
+        $responseBody = $reader.ReadToEnd()
+        Log "❌ Failed to create GitHub repo $repoName - Status: $statusCode, Response: $responseBody"
+
+        if ($statusCode -eq 422 -and $responseBody -match "already exists") {
+            Log "⚠️ Repo $repoName likely already exists. Continuing..."
+            return $true
+        }
+
+        return $false
+    }
+}
+
+# -------------------------------
+# Main Migration Loop
+# -------------------------------
+foreach ($project in $projectData) {
+    if (-not $project -or -not $project.ProjectName) {
+        Log "Skipping invalid project entry"
         continue
     }
 
-    $projectName = $proj.ProjectName.Trim()
-    $encodedProjectName = $projectName -replace ' ', '%20'
+    $projectName = $project.ProjectName.Trim()
+    Log "`nProcessing project: $projectName"
 
-    Write-Host "`nProcessing project: $projectName" >> conversionlog.txt
-
-    foreach ($repo in $proj.Repositories) {
+    foreach ($repo in $project.Repositories) {
         if ($repo.RepositoryType -ne "TFVC") {
-            Write-Host "Skipping non-TFVC repository: $($repo.RepositoryName)" >> conversionlog.txt
+            Log "Skipping non-TFVC repository: $($repo.RepositoryName)"
             continue
         }
 
         $tfvcPath = $repo.RepositoryName
         $repoNameRaw = ($tfvcPath -split '/')[-1] -replace '[^\w\-]', '-'
-        $repoPath = Join-Path -Path $downloadedReposFolder -ChildPath $repoNameRaw
+        $repoPath = Join-Path -Path $workspaceRoot -ChildPath $repoNameRaw
 
-        # Attempt GitHub repo creation first
-        $createRepoUrl = "https://api.github.com/orgs/$destinationorganization/repos"
-        $repoBody = @{
-            name        = $repoNameRaw
-            visibility  = "internal"
-            description = "Migrated from TFS TFVC: $tfvcPath"
-        } | ConvertTo-Json -Depth 3
-
-        $headers = @{
-            Authorization  = "token $githubPat"
-            "User-Agent"   = "TFS-to-GitHub-Migration-Script"
-            Accept         = "application/vnd.github+json"
-            "Content-Type" = "application/json"
-        }
-
-        Write-Host "`n➡️ Creating GitHub repo: $repoNameRaw" | Tee-Object -Append -FilePath conversionlog.txt
-        Write-Host "POST $createRepoUrl" | Tee-Object -Append -FilePath conversionlog.txt
-        Write-Host "Request Body: $repoBody" | Tee-Object -Append -FilePath conversionlog.txt
-
-        try {
-            $response = Invoke-RestMethod -Uri $createRepoUrl -Method Post -Headers $headers -Body $repoBody -ErrorAction Stop
-            Write-Host "✅ GitHub repo created successfully: $repoNameRaw" | Tee-Object -Append -FilePath conversionlog.txt
-        } catch {
-            $statusCode = $_.Exception.Response.StatusCode.Value__
-            $errorStream = $_.Exception.Response.GetResponseStream()
-            $reader = New-Object System.IO.StreamReader($errorStream)
-            $responseBody = $reader.ReadToEnd()
-
-            Write-Host "❌ Failed to create GitHub repo: $repoNameRaw" | Tee-Object -Append -FilePath conversionlog.txt
-            Write-Host "Status Code: $statusCode" | Tee-Object -Append -FilePath conversionlog.txt
-            Write-Host "Error Response: $responseBody" | Tee-Object -Append -FilePath conversionlog.txt
+        # Create GitHub repo first
+        $created = Create-GitHubRepo -repoName $repoNameRaw
+        if (-not $created) {
+            Log "Skipping repo due to GitHub creation failure: $repoNameRaw"
             continue
         }
 
-        # Clean the directory if it exists
+        # Clean existing directory
         if (Test-Path -Path $repoPath) {
-            Remove-Item -Recurse -Force $repoPath
+            Log "Removing existing directory: $repoPath"
+            Remove-Item -Recurse -Force -Path $repoPath
         }
 
-        # Ensure the directory exists before cloning
-        if (-not (Test-Path -Path $repoPath)) {
-            Write-Host "Directory $repoPath does not exist. Creating it..." | Tee-Object -Append -FilePath conversionlog.txt
-            New-Item -ItemType Directory -Force -Path $repoPath | Out-Null
-        }
+        # Create directory for cloning
+        New-Item -ItemType Directory -Force -Path $repoPath | Out-Null
 
-        Write-Host "Cloning TFVC repository: $tfvcPath to $repoPath" >> conversionlog.txt
+        # Clone TFVC repo with git-tfs (disable ssl verification)
+        $gitTfsCmd = "git tfs clone $organization `"$tfvcPath`" `"$repoPath`" --branches=auto --username=PersonalAccessToken --password=$tfsPat --no-ssl-verify"
+        Log "Executing: $gitTfsCmd"
 
-        # Execute the git-tfs clone command with --workspace
-        $gitTfsCloneCommand = "git tfs clone $organization $tfvcPath --workspace=$repoPath --branches=auto --username=PersonalAccessToken --password=$tfsPat --no-ssl-verify"
-        Write-Host "Executing: $gitTfsCloneCommand" | Tee-Object -Append -FilePath conversionlog.txt
-        Start-Process -NoNewWindow -FilePath "cmd.exe" -ArgumentList "/c $gitTfsCloneCommand" -Wait
+        $processInfo = New-Object System.Diagnostics.ProcessStartInfo
+        $processInfo.FileName = "cmd.exe"
+        $processInfo.Arguments = "/c $gitTfsCmd"
+        $processInfo.RedirectStandardOutput = $true
+        $processInfo.RedirectStandardError = $true
+        $processInfo.UseShellExecute = $false
+        $processInfo.CreateNoWindow = $true
 
-        # Check if the cloning was successful
-        if (-not (Test-Path -Path (Join-Path -Path $repoPath -ChildPath ".git"))) {
-            Write-Host "❌ Failed to clone repository: $tfvcPath. Directory $repoPath is not a valid Git repository." | Tee-Object -Append -FilePath conversionlog.txt
+        $process = New-Object System.Diagnostics.Process
+        $process.StartInfo = $processInfo
+        $process.Start() | Out-Null
+        $stdOut = $process.StandardOutput.ReadToEnd()
+        $stdErr = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+
+        Log "git-tfs output: $stdOut"
+        if ($stdErr) { Log "git-tfs errors: $stdErr" }
+
+        if (-not (Test-Path -Path (Join-Path $repoPath ".git"))) {
+            Log "❌ Clone failed, no .git folder at $repoPath"
             continue
         }
 
-        cd $repoPath
+        # Push to GitHub
+        Push-Location $repoPath
 
-        if (git remote | Select-String -Pattern "origin") {
+        # Remove existing origin remote if exists
+        $originExists = git remote | Select-String -Pattern "^origin$"
+        if ($originExists) {
             git remote remove origin
+            Log "Removed existing 'origin' remote"
         }
 
-        $remoteUrl = "https://$($githubPat)@github.com/$($destinationorganization)/$($repoNameRaw).git"
-        Write-Host "Adding origin with URL: $remoteUrl" >> conversionlog.txt
+        $remoteUrl = "https://$githubPat@github.com/$destinationOrg/$repoNameRaw.git"
         git remote add origin $remoteUrl
+        Log "Added 'origin' remote: $remoteUrl"
 
-        Write-Host "Pushing all branches to origin..." >> conversionlog.txt
+        Log "Pushing all branches and tags to GitHub..."
         git push -u origin --all
         git push origin --tags
 
+        Log "Running git tfs cleanup"
         git tfs cleanup
-        cd ..
+
+        Pop-Location
     }
 }
 
-Write-Host "✅ Complete downloading and migrating repos" >> conversionlog.txt
+Log "✅ Migration completed successfully!"

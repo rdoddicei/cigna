@@ -14,29 +14,34 @@ if (-not $GitHubToken) { throw "GITHUB_TOKEN is not set in environment variables
 # Define working directory
 $workingDir = Join-Path -Path $PWD -ChildPath "repo"
 
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Starting migration as per $JsonFilePath"
+Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Migration script started."
+Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Input JSON file: $JsonFilePath"
+Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - TFS URL: $TfsUrl"
+Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - GitHub Org: $GitHubOrg"
 
 # Read and parse JSON file
+Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Reading and parsing JSON input - START"
 if (-not (Test-Path $JsonFilePath)) {
     throw "JSON file $JsonFilePath not found."
 }
 $jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
+Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Reading and parsing JSON input - END"
 
 foreach ($project in $jsonContent.projects) {
     $projectName = $project.projectName
+    Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Processing project: $projectName - START"
+
     foreach ($repo in $project.repositories) {
         $repoName = $repo.name
         $repoType = $repo.type.ToUpper()
-
         $tfvcPath = "$/$projectName/$repoName"
-        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -  Project: $projectName, Repo: $repoName, Type: $repoType"
-        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -  Current Working Directory: $workingDir"
 
-        # Create local repo folder path
+        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Processing repository: $repoName of type $repoType - START"
+
         $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
 
         # Step 1: Create GitHub repo via API
-        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -  Creating GitHub repo: $repoName"
+        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Creating GitHub repository: $repoName - START"
 
         $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
         $repoBody = @{
@@ -53,25 +58,27 @@ foreach ($project in $jsonContent.projects) {
 
         try {
             $response = Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -  Created GitHub repo: $repoName"
+            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - GitHub repository $repoName created successfully"
         } catch {
-            Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -  Failed to create GitHub repo: $repoName. Error: $_"
+            Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Failed to create GitHub repository: $repoName. Error: $_"
             continue
         }
 
+        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Creating GitHub repository: $repoName - END"
+
         if ($repoType -eq "TFVC") {
-            # Clone TFVC repo using git-tfs
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') -  Cloning TFVC repo using git-tfs"
+            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Cloning TFVC repository $tfvcPath using git-tfs - START"
 
             if (Test-Path $localRepoPath) {
                 Remove-Item -Recurse -Force -Path $localRepoPath
             }
 
             $cloneCmd = "git tfs clone --username user --password $TfsToken $TfsUrl $tfvcPath $localRepoPath"
-            Write-Host "Running: $cloneCmd"
+            Write-Host "Running command: $cloneCmd"
             $cloneResult = & git tfs clone --username user --password $TfsToken $TfsUrl $tfvcPath $localRepoPath
+
             if ($LASTEXITCODE -ne 0) {
-                Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - git-tfs clone failed for repo $repoName"
+                Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - git-tfs clone failed for repository $repoName"
                 continue
             }
 
@@ -82,17 +89,21 @@ foreach ($project in $jsonContent.projects) {
             Set-Location -Path $workingDir
 
             Remove-Item -Recurse -Force -Path $localRepoPath
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Deleted local repo directory: $localRepoPath"
+            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Deleted local repository directory: $localRepoPath"
+
+            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Cloning TFVC repository $tfvcPath using git-tfs - END"
         }
         elseif ($repoType -eq "GIT") {
-            # For Git repos, you might want to clone from TFS Git repo and push to GitHub
-            # Add your Git repo migration logic here if needed
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Git repo migration logic not implemented for repo $repoName"
+            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Git repository migration is not yet implemented for: $repoName"
         }
         else {
-            Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Unknown repo type '$repoType' for repo $repoName"
+            Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Unknown repository type '$repoType' for repository $repoName"
         }
+
+        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Processing repository: $repoName of type $repoType - END"
     }
+
+    Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Processing project: $projectName - END"
 }
 
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Migration completed."
+Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Migration script completed."

@@ -1,15 +1,14 @@
 # TFS and GitHub Personal Access Tokens
-$env:tfsPat = "${ secrets.TFS_PAT }"
-$env:githubPat = "${ secrets.GH_PAT }"
+$tfsPat = $env:TFS_PAT
+$githubPat = $env:GITHUB_PAT
 
 # Encode the TFS PAT for the Authorization header
 $base64AuthInfo = [Convert]::ToBase64String([Text.Encoding]::ASCII.GetBytes("user:$tfsPat"))
 
 $organization = "https://tfs.sys.cigna.com/tfs/DefaultCollection"
-$destinationorganization = "cigna-group"
+$destinationorganization = "cigna-group-infrastructure-services"
 Write-Host "$env:GITHUB_WORKSPACE"
-$ProjectListJsonPath = "$env:GITHUB_WORKSPACE\repo-migration\projectRepoDetailsTFS2017.json" # Replace with corrcet PATH
-
+$ProjectListJsonPath = "$env:GITHUB_WORKSPACE\repo-migration\projectRepoDetailsTFS2017.json" # Replace with correct PATH
 
 # Read and parse the JSON file
 if (-not (Test-Path -Path $ProjectListJsonPath)) {
@@ -19,10 +18,13 @@ if (-not (Test-Path -Path $ProjectListJsonPath)) {
 
 $projectData = Get-Content -Raw $ProjectListJsonPath | ConvertFrom-Json
 $results = @()
-$downloadedReposFolder = "C:\t"
+$downloadedReposFolder = "C:\TempMigration"
 
 # Set TFS PAT as an environment variable for git-tfs
 [System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", $tfsPat, [System.EnvironmentVariableTarget]::User)
+
+# Disable SSL verification globally for Git (if necessary)
+git config --global http.sslVerify false
 
 # Create the downloadedtfvcrepos directory if it doesn't exist
 if (-not (Test-Path -Path $downloadedReposFolder)) {
@@ -54,7 +56,7 @@ foreach ($proj in $projectData) {
         $createRepoUrl = "https://api.github.com/orgs/$destinationorganization/repos"
         $repoBody = @{
             name        = $repoNameRaw
-            visibility     = "internal"
+            visibility  = "internal"
             description = "Migrated from TFS TFVC: $tfvcPath"
         } | ConvertTo-Json -Depth 3
 
@@ -89,13 +91,22 @@ foreach ($proj in $projectData) {
             Remove-Item -Recurse -Force $repoPath
         }
 
+        # Ensure the directory exists before cloning
+        if (-not (Test-Path -Path $repoPath)) {
+            Write-Host "Directory $repoPath does not exist. Creating it..." | Tee-Object -Append -FilePath conversionlog.txt
+            New-Item -ItemType Directory -Force -Path $repoPath | Out-Null
+        }
+
         Write-Host "Cloning TFVC repository: $tfvcPath to $repoPath" >> conversionlog.txt
 
-        $gitTfsCloneCommand = "git tfs clone $organization $tfvcPath $repoPath --branches=auto --username=PersonalAccessToken --password=$tfsPat"
+        # Execute the git-tfs clone command with --workspace
+        $gitTfsCloneCommand = "git tfs clone $organization $tfvcPath --workspace=$repoPath --branches=auto --username=PersonalAccessToken --password=$tfsPat --no-ssl-verify"
+        Write-Host "Executing: $gitTfsCloneCommand" | Tee-Object -Append -FilePath conversionlog.txt
         Start-Process -NoNewWindow -FilePath "cmd.exe" -ArgumentList "/c $gitTfsCloneCommand" -Wait
 
-        if (-not (Test-Path -Path $repoPath)) {
-            Write-Host "❌ Failed to clone repository: $tfvcPath. Directory $repoPath does not exist." | Tee-Object -Append -FilePath conversionlog.txt
+        # Check if the cloning was successful
+        if (-not (Test-Path -Path (Join-Path -Path $repoPath -ChildPath ".git"))) {
+            Write-Host "❌ Failed to clone repository: $tfvcPath. Directory $repoPath is not a valid Git repository." | Tee-Object -Append -FilePath conversionlog.txt
             continue
         }
 

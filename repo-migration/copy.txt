@@ -31,18 +31,21 @@ if (-not (Test-Path $JsonFilePath)) {
 }
 
 $jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
-Write-Output "Loaded JSON file with $($jsonContent.projects.Count) projects."
+Write-Output "Loaded JSON with $($jsonContent.Count) project(s)."
 
 # ========== Block 3: Process Each Project and Repository ==========
 
-foreach ($project in $jsonContent.projects) {
-    $projectName = $project.projectName
+foreach ($project in $jsonContent) {
+    $projectName = $project.ProjectName
+    $repositories = $project.Repositories
+
     Write-Output "`n=== BLOCK 3: Processing Project: $projectName ==="
 
-    foreach ($repo in $project.repositories) {
-        $repoName = $repo.name
-        $repoType = $repo.type.ToUpper()
-        $tfvcPath = "$/$projectName/$repoName"
+    foreach ($repo in $repositories) {
+        $repoPath = $repo.RepositoryName
+        $repoName = ($repoPath -split '/')[ -1 ]
+        $repoType = $repo.RepositoryType.ToUpper()
+        $tfvcPath = $repoPath
         $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
 
         Write-Output "`n--- Processing Repository: $repoName (Type: $repoType) ---"
@@ -76,7 +79,7 @@ foreach ($project in $jsonContent.projects) {
 
         if ($repoType -eq "TFVC") {
             Write-Output "`nBLOCK 5: Cloning TFVC Repo from TFS: $tfvcPath"
-            
+
             if (Test-Path $localRepoPath) {
                 Write-Output "Removing existing local directory: $localRepoPath"
                 Remove-Item -Recurse -Force -Path $localRepoPath
@@ -84,7 +87,7 @@ foreach ($project in $jsonContent.projects) {
 
             $cloneCmd = "git tfs clone --username user --password *** $TfsUrl $tfvcPath $localRepoPath"
             Write-Output "Executing: $cloneCmd"
-            
+
             & git tfs clone --username user --password $TfsToken $TfsUrl $tfvcPath $localRepoPath
             if ($LASTEXITCODE -ne 0) {
                 Write-Output "ERROR: git-tfs clone failed for $repoName. Skipping push."
@@ -110,7 +113,6 @@ foreach ($project in $jsonContent.projects) {
             Write-Output "`nBLOCK 7: Cleaning Up Local Repo Directory"
             Remove-Item -Recurse -Force -Path $localRepoPath
             Write-Output "Local repo directory removed: $localRepoPath"
-
         } elseif ($repoType -eq "GIT") {
             Write-Output "Git repository migration not implemented yet for $repoName"
         } else {

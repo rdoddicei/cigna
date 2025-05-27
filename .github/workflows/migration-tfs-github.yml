@@ -1,0 +1,36 @@
+name: Migrate TFVC to GitHub
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate-tfvc:    
+    runs-on:
+      group: TFS-Migration-Runner
+
+    steps:    
+      - name: Disable SSL verification
+        run: |
+          git config --global http.sslVerify false
+
+      # - name: Set global Git user and email
+      #   run: |
+      #     git config --global user.name "GitHub Actions"
+      #     git config --global user.email "actions@github.com"
+
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up environment variables
+        shell: powershell
+        run: |
+          $env:TFS_PAT = "${{ secrets.TFS_PAT }}"
+          $env:GITHUB_PAT = "${{ secrets.GH_PAT }}"
+          [System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", $env:TFS_PAT, [System.EnvironmentVariableTarget]::User)
+
+      - name: Execute migration script
+        shell: powershell
+        run: |
+          $env:TFS_PAT = "${{ secrets.TFS_PAT }}"
+          $env:GITHUB_PAT = "${{ secrets.GH_PAT }}"
+          ./repo-migration/tfvc-to-github.ps1

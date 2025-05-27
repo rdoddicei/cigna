@@ -1,109 +1,112 @@
 param(
-    [Parameter(Mandatory=$true)] [string]$TfsUrl,
-    [Parameter(Mandatory=$true)] [string]$GitHubOrg,
-    [Parameter(Mandatory=$true)] [string]$JsonFilePath
+    [Parameter(Mandatory = $true)] [string]$TfsUrl,
+    [Parameter(Mandatory = $true)] [string]$GitHubOrg,
+    [Parameter(Mandatory = $true)] [string]$JsonFilePath
 )
 
 # Read tokens from environment variables
 $TfsToken = $env:TFS_TOKEN
 $GitHubToken = $env:GITHUB_TOKEN
 
-if (-not $TfsToken) { throw "TFS_TOKEN is not set in environment variables." }
-if (-not $GitHubToken) { throw "GITHUB_TOKEN is not set in environment variables." }
+if (-not $TfsToken) { throw "Environment variable TFS_TOKEN is not set." }
+if (-not $GitHubToken) { throw "Environment variable GITHUB_TOKEN is not set." }
 
-# Define working directory
+# Set working directory
 $workingDir = Join-Path -Path $PWD -ChildPath "repo"
+New-Item -ItemType Directory -Force -Path $workingDir | Out-Null
 
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Migration script started."
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Input JSON file: $JsonFilePath"
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - TFS URL: $TfsUrl"
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - GitHub Org: $GitHubOrg"
+Write-Host "=== Starting migration using input file: $JsonFilePath ==="
 
-# Read and parse JSON file
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Reading and parsing JSON input - START"
+# Validate and parse JSON
 if (-not (Test-Path $JsonFilePath)) {
-    throw "JSON file $JsonFilePath not found."
+    throw "JSON file not found at path: $JsonFilePath"
 }
 $jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Reading and parsing JSON input - END"
 
 foreach ($project in $jsonContent.projects) {
     $projectName = $project.projectName
-    Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Processing project: $projectName - START"
+    Write-Host "`n--- Processing project: $projectName ---"
 
     foreach ($repo in $project.repositories) {
         $repoName = $repo.name
         $repoType = $repo.type.ToUpper()
         $tfvcPath = "$/$projectName/$repoName"
-
-        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Processing repository: $repoName of type $repoType - START"
-
         $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
 
-        # Step 1: Create GitHub repo via API
-        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Creating GitHub repository: $repoName - START"
+        Write-Host "`n>>> Starting migration for repository: $repoName"
+        Write-Host "Repository Type: $repoType"
+        Write-Host "Local Working Directory: $localRepoPath"
+
+        # Step 1: Create GitHub repository
+        Write-Host "`n[Step 1] Creating GitHub repository: $repoName"
 
         $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
         $repoBody = @{
-            name = $repoName
-            private = $true
+            name      = $repoName
+            private   = $true
             auto_init = $false
-        } | ConvertTo-Json
+        } | ConvertTo-Json -Depth 3
 
         $headers = @{
             Authorization = "token $GitHubToken"
-            Accept = "application/vnd.github.v3+json"
-            "User-Agent" = "PowerShell-Script"
+            Accept        = "application/vnd.github.v3+json"
+            "User-Agent"  = "PowerShell-Script"
         }
 
         try {
-            $response = Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - GitHub repository $repoName created successfully"
+            $response = Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody -ErrorAction Stop
+            Write-Host "[SUCCESS] GitHub repository created: $repoName"
         } catch {
-            Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Failed to create GitHub repository: $repoName. Error: $_"
+            $statusCode = $_.Exception.Response.StatusCode.Value__
+            $streamReader = New-Object System.IO.StreamReader($_.Exception.Response.GetResponseStream())
+            $responseBody = $streamReader.ReadToEnd()
+            Write-Warning "[ERROR] Failed to create GitHub repo: $repoName"
+            Write-Host "Status Code: $statusCode"
+            Write-Host "Response Body: $responseBody"
+            Write-Host "[SKIPPED] Skipping migration for: $repoName"
             continue
         }
 
-        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Creating GitHub repository: $repoName - END"
-
+        # Step 2: Clone and migrate the repo
         if ($repoType -eq "TFVC") {
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Cloning TFVC repository $tfvcPath using git-tfs - START"
+            Write-Host "`n[Step 2] Cloning TFVC repository: $tfvcPath"
 
             if (Test-Path $localRepoPath) {
                 Remove-Item -Recurse -Force -Path $localRepoPath
+                Write-Host "Deleted existing local directory: $localRepoPath"
             }
 
-            $cloneCmd = "git tfs clone --username user --password $TfsToken $TfsUrl $tfvcPath $localRepoPath"
-            Write-Host "Running command: $cloneCmd"
+            $cloneCmd = "git tfs clone --username user --password *** $TfsUrl $tfvcPath $localRepoPath"
+            Write-Host "Running: git tfs clone ..."
             $cloneResult = & git tfs clone --username user --password $TfsToken $TfsUrl $tfvcPath $localRepoPath
 
             if ($LASTEXITCODE -ne 0) {
-                Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - git-tfs clone failed for repository $repoName"
+                Write-Warning "[ERROR] git-tfs clone failed for: $repoName"
                 continue
             }
 
+            Write-Host "[SUCCESS] TFVC repository cloned to: $localRepoPath"
+
+            Write-Host "`n[Step 3] Pushing to GitHub: $repoName"
             Set-Location -Path $localRepoPath
             git remote add origin "https://$GitHubToken@github.com/$GitHubOrg/$repoName.git"
             git push origin --all
             git push origin --tags
             Set-Location -Path $workingDir
 
+            Write-Host "[SUCCESS] Repository pushed to GitHub: $repoName"
+
             Remove-Item -Recurse -Force -Path $localRepoPath
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Deleted local repository directory: $localRepoPath"
+            Write-Host "Cleaned up local directory: $localRepoPath"
 
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Cloning TFVC repository $tfvcPath using git-tfs - END"
-        }
-        elseif ($repoType -eq "GIT") {
-            Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Git repository migration is not yet implemented for: $repoName"
-        }
-        else {
-            Write-Warning "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Unknown repository type '$repoType' for repository $repoName"
+        } elseif ($repoType -eq "GIT") {
+            Write-Warning "[INFO] Git repository migration not implemented for: $repoName"
+        } else {
+            Write-Warning "[WARNING] Unknown repository type: $repoType"
         }
 
-        Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Processing repository: $repoName of type $repoType - END"
+        Write-Host ">>> Completed migration for repository: $repoName"
     }
-
-    Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Processing project: $projectName - END"
 }
 
-Write-Host "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - Migration script completed."
+Write-Host "`n=== Migration completed for all projects ==="

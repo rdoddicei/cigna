@@ -6,13 +6,13 @@ param(
 
 # ==========  Read Tokens and Setup ==========
 
-Write-Output "`n===  Reading Tokens and Setting Up Directories ==="
+Write-Output "`n=== Reading Tokens and Setting Up Directories ==="
 
-$TfsToken = "----"
-$GitHubToken = "---"
+$TfsToken = "YOUR_TFS_PAT"
+$GitHubToken = "YOUR_GITHUB_PAT"
 
-if (-not $TfsToken) { throw "Missing TFS_TOKEN in environment variables." }
-if (-not $GitHubToken) { throw "Missing GITHUB_TOKEN in environment variables." }
+if (-not $TfsToken) { throw "Missing TFS_TOKEN in script." }
+if (-not $GitHubToken) { throw "Missing GITHUB_TOKEN in script." }
 
 $workingDir = Join-Path -Path $PWD -ChildPath "repo"
 if (-not (Test-Path $workingDir)) {
@@ -33,13 +33,13 @@ if (-not (Test-Path $JsonFilePath)) {
 $jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
 Write-Output "Loaded JSON with $($jsonContent.Count) project(s)."
 
-# ==========  Process Each Project and Repository ==========
+# ========== Process Each Project and Repository ==========
 
 foreach ($project in $jsonContent) {
     $projectName = $project.ProjectName
     $repositories = $project.Repositories
 
-    Write-Output "`n===  Processing Project: $projectName ==="
+    Write-Output "`n=== Processing Project: $projectName ==="
 
     foreach ($repo in $repositories) {
         $repoPath = $repo.RepositoryName
@@ -49,7 +49,7 @@ foreach ($project in $jsonContent) {
 
         Write-Output "`n--- Processing Repository: $repoName (Type: $repoType) ---"
 
-        # ==========  Create GitHub Repo ==========
+        # ========== Create GitHub Repo ==========
 
         Write-Output "`n Creating GitHub Repository: $repoName"
         $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
@@ -75,7 +75,7 @@ foreach ($project in $jsonContent) {
         }
 
         if ($repoType -eq "GIT") {
-            # ==========  Clone Git Repo from TFS  ==========
+            # ========== Clone Git Repo from TFS ==========
 
             Write-Output "`n Cloning Git Repo from TFS: $repoPath"
 
@@ -85,19 +85,24 @@ foreach ($project in $jsonContent) {
             }
 
             $tfsGitRepoUrl = "$TfsUrl/$repoPath"
-            $secureTfsToken = [System.Web.HttpUtility]::UrlEncode($TfsToken)
+            $encodedTfsToken = [System.Web.HttpUtility]::UrlEncode($TfsToken)
 
-            $cloneUrl = $tfsGitRepoUrl -replace "^https://", "https://user:$secureTfsToken@"
-            Write-Output "Executing: git clone $cloneUrl"
+            # Disable Git credential helper
+            git config --global credential.helper ""
 
-            git -c http.sslVerify=false clone $cloneUrl $localRepoPath
-        
+            # Construct secure TFS clone URL
+            $secureCloneUrl = $tfsGitRepoUrl -replace "^https://", "https://user:$encodedTfsToken@"
+
+            Write-Output "Executing: git -c http.sslVerify=false clone $secureCloneUrl"
+
+            git -c http.sslVerify=false clone $secureCloneUrl $localRepoPath
+
             if ($LASTEXITCODE -ne 0) {
                 Write-Output "ERROR: Git clone failed for $repoName. Skipping push."
                 continue
             }
 
-            # ==========  Push to GitHub ==========
+            # ========== Push to GitHub ==========
 
             Write-Output "`n Pushing Repo to GitHub"
             Set-Location -Path $localRepoPath
@@ -109,7 +114,7 @@ foreach ($project in $jsonContent) {
             Set-Location -Path $workingDir
             Write-Output "Repository pushed successfully to GitHub: $repoName"
 
-            # ==========  Cleanup ==========
+            # ========== Cleanup ==========
 
             Write-Output "`n Cleaning Up Local Repo Directory"
             Remove-Item -Recurse -Force -Path $localRepoPath
@@ -128,5 +133,4 @@ foreach ($project in $jsonContent) {
 }
 
 # ========== Final Output ==========
-
-Write-Output "`n===  Migration Completed  ==="
+Write-Output "`n=== Migration Completed ==="

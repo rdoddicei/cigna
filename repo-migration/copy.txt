@@ -1,1 +1,105 @@
-https://tfs.sys.cigna.com/tfs/DefaultCollection/$/Healthcare-CLMCCE/Cigna.CoreOps.VBS.CLMCEE.Router/'
+param(
+    [Parameter(Mandatory = $true)] [string]$TfsUrl,
+    [Parameter(Mandatory = $true)] [string]$GitHubOrg,
+    [Parameter(Mandatory = $true)] [string]$JsonFilePath
+)
+
+# === Load Tokens ===
+$TfsToken = "YOUR_TFS_PAT"         # Replace with your TFS Personal Access Token
+$GitHubToken = "YOUR_GITHUB_PAT"   # Replace with your GitHub Personal Access Token
+
+if (-not $TfsToken) { throw "Missing TFS_TOKEN." }
+if (-not $GitHubToken) { throw "Missing GITHUB_TOKEN." }
+
+# === Setup Working Directory ===
+$workingDir = Join-Path -Path $PWD -ChildPath "repo"
+if (-not (Test-Path $workingDir)) {
+    New-Item -ItemType Directory -Path $workingDir | Out-Null
+}
+
+# === Read JSON Input ===
+if (-not (Test-Path $JsonFilePath)) {
+    throw "Input file not found: $JsonFilePath"
+}
+
+$jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
+Write-Output "`nLoaded JSON with $($jsonContent.Count) project(s)."
+
+# === Process Each Project ===
+foreach ($project in $jsonContent) {
+    $projectName = $project.ProjectName
+    $repositories = $project.Repositories
+
+    Write-Output "`n=== Project: $projectName ==="
+
+    foreach ($repo in $repositories) {
+        $repoPath = $repo.RepositoryName
+        $repoName = ($repoPath -split '/')[ -1 ]
+        $repoType = $repo.RepositoryType.ToUpper()
+        $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
+
+        Write-Output "`n--- Repo: $repoName (Type: $repoType) ---"
+
+        # === Create GitHub Repo ===
+        $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
+        $repoBody = @{
+            name       = $repoName
+            visibility = "internal"
+            auto_init  = $false
+        } | ConvertTo-Json -Depth 3
+
+        $headers = @{
+            Authorization = "token $GitHubToken"
+            Accept        = "application/vnd.github.v3+json"
+            "User-Agent"  = "PowerShell-Script"
+        }
+
+        try {
+            Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody | Out-Null
+            Write-Output "✅ GitHub repo created: $repoName"
+        } catch {
+            Write-Output "⚠️ Repo $repoName may already exist or creation failed. Skipping repo creation."
+        }
+
+        if ($repoType -eq "GIT") {
+            # === Clone from TFS ===
+            if (Test-Path $localRepoPath) {
+                Remove-Item -Recurse -Force -Path $localRepoPath
+            }
+
+            # Remove leading $/ if present in TFS path
+            $cleanRepoPath = $repoPath -replace "^\$/", ""
+            $tfsGitUrl = "$TfsUrl/$cleanRepoPath"
+            $secureCloneUrl = $tfsGitUrl -replace "^https://", "https://user:$TfsToken@"
+
+            Write-Output "Cloning from TFS: $secureCloneUrl"
+            git -c http.sslVerify=false clone $secureCloneUrl $localRepoPath
+
+            if ($LASTEXITCODE -ne 0) {
+                Write-Output "❌ Git clone failed for $repoName. Skipping push."
+                continue
+            }
+
+            # === Push to GitHub ===
+            Write-Output "Pushing to GitHub..."
+            Set-Location -Path $localRepoPath
+            git remote add origin "https://$GitHubToken@github.com/$GitHubOrg/$repoName.git"
+            git push origin --all
+            git push origin --tags
+            Set-Location -Path $workingDir
+            Write-Output "✅ Repo pushed to GitHub: $repoName"
+
+            # === Cleanup ===
+            Remove-Item -Recurse -Force -Path $localRepoPath
+            Write-Output "🧹 Cleaned up local repo directory"
+        }
+        elseif ($repoType -eq "TFVC") {
+            Write-Output "⚠️ TFVC repo support not implemented yet: $repoName"
+        }
+        else {
+            Write-Output "❌ Unknown repository type: $repoType"
+        }
+    }
+}
+
+Write-Output "`n✅ All projects processed."

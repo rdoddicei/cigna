@@ -1,19 +1,50 @@
-Create a new workflow file and then paste this for testing, lets not disturb the working script
-
-name: Migrate TFVC to GitHub with Secrets
+name: WorkFlow Dispatch
 
 on:
   workflow_dispatch:
+    inputs:
+      project_name:
+        description: "Select the TFS Project"
+        required: true
+        type: choice
+        options:
+          - Healthcare-xRX
+          - Healthcare-HZD_DEFINEDCARE
+          # Add more project names here
+
+      repository_name:
+        description: "Select the Repository"
+        required: true
+        type: choice
+        options:
+          - $/Healthcare-xRX        
+          - $/Healthcare-xRX/BuildProcessTemplates
+          - $/Healthcare-xRX/Cigna.Pharmacy.ErrorList
+          - $/Healthcare-xRX/Cigna.Pharmacy.GetImagebyUrl
+          - $/Healthcare-xRX/Cigna.Pharmacy.MailRx-ImageViewer
+          - $/Healthcare-xRX/Cigna.Pharmacy.SRxBatchReportExtracts
+          - $/Healthcare-xRX/Cigna.Pharmacy.xRx.ImageService
+          - $/Healthcare-xRX/Cigna.Pharmacy.xRx.Web
+          - $/Healthcare-xRX/Development
+          - $/Healthcare-xRX/Main
+          - $/Healthcare-xRX/Prod_Fix
+          - $/Healthcare-xRX/Release
+          - $/Healthcare-xRX/Source
+          - $/Healthcare-HZD_DEFINEDCARE
+          - $/Healthcare-HZD_DEFINEDCARE/BuildProcessTemplates
+          - $/Healthcare-HZD_DEFINEDCARE/Development
+          - $/Healthcare-HZD_DEFINEDCARE/Main
+          - $/Healthcare-HZD_DEFINEDCARE/Release
+          # Add more as needed
 
 jobs:
-  migrate-tfvc:
+  migrate-tfvc:    
     runs-on:
       group: TFS-Migration-Runner
 
-    steps:
+    steps:    
       - name: Disable SSL verification
-        run: |
-          git config --global http.sslVerify false
+        run: git config --global http.sslVerify false
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -21,154 +52,33 @@ jobs:
       - name: Set up environment variables
         shell: powershell
         run: |
-          # Export secrets as environment variables for the next steps
-          [System.Environment]::SetEnvironmentVariable("TFS_PAT", "${{ secrets.TFS_PAT }}", [System.EnvironmentVariableTarget]::Process)
-          [System.Environment]::SetEnvironmentVariable("GITHUB_PAT", "${{ secrets.GH_PAT }}", [System.EnvironmentVariableTarget]::Process)
-          [System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", "${{ secrets.TFS_PAT }}", [System.EnvironmentVariableTarget]::User)
+          $env:TFS_PAT = "${{ secrets.TFS_PAT }}"
+          $env:GITHUB_PAT = "${{ secrets.GH_PAT }}"
+          [System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", $env:TFS_PAT, [System.EnvironmentVariableTarget]::User)
 
-      - name: Run Migration PowerShell Script
+      - name: Generate input JSON file
         shell: powershell
         run: |
-          Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process
-          Write-Output "Starting migration script..."
-          ./repo-migration/tfvc-to-github.ps1 `
-            -TfsUrl "https://tfs.sys.cigna.com/tfs/DefaultCollection" `
-            -GitHubOrg "cigna-group-infrastructure-services" `
-            -JsonFilePath "./repo-migration/projectRepoDetailsTFS2017.json"
-
-
-Powershell
-
-param(
-    [Parameter(Mandatory = $true)] [string]$TfsUrl,
-    [Parameter(Mandatory = $true)] [string]$GitHubOrg,
-    [Parameter(Mandatory = $true)] [string]$JsonFilePath
-)
-
-# ========== Block 1: Read Tokens and Setup ==========
-
-Write-Output "`n=== BLOCK 1: Reading Tokens and Setting Up Directories ==="
-
-$TfsToken = $env:TFS_PAT
-$GitHubToken = $env:GITHUB_PAT
-
-if (-not $TfsToken) { throw "Missing TFS_PAT in environment variables." }
-if (-not $GitHubToken) { throw "Missing GITHUB_PAT in environment variables." }
-
-$workingDir = Join-Path -Path $PWD -ChildPath "repo"
-if (-not (Test-Path $workingDir)) {
-    Write-Output "Creating working directory at $workingDir"
-    New-Item -ItemType Directory -Path $workingDir | Out-Null
-} else {
-    Write-Output "Working directory already exists at $workingDir"
-}
-
-# ========== Block 2: Read JSON Input ==========
-
-Write-Output "`n=== BLOCK 2: Reading Input JSON File ==="
-
-if (-not (Test-Path $JsonFilePath)) {
-    throw "JSON input file not found: $JsonFilePath"
-}
-
-$jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
-Write-Output "Loaded JSON with $($jsonContent.Count) project(s)."
-
-# ========== Block 3: Process Each Project and Repository ==========
-
-foreach ($project in $jsonContent) {
-    $projectName = $project.ProjectName
-    $repositories = $project.Repositories
-
-    Write-Output "`n=== BLOCK 3: Processing Project: $projectName ==="
-
-    foreach ($repo in $repositories) {
-        $repoPath = $repo.RepositoryName
-        $repoName = ($repoPath -split '/')[ -1 ]
-        $repoType = $repo.RepositoryType.ToUpper()
-        $tfvcPath = $repoPath
-        $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
-
-        Write-Output "`n--- Processing Repository: $repoName (Type: $repoType) ---"
-
-        # ========== Block 4: Create GitHub Repo ==========
-
-        Write-Output "`nBLOCK 4: Creating GitHub Repository: $repoName"
-        $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
-        $repoBody = @{
-            name = $repoName
-            visibility = "internal"
-            auto_init = $false
-        } | ConvertTo-Json -Depth 3
-
-        $headers = @{
-            Authorization = "token $GitHubToken"
-            Accept = "application/vnd.github.v3+json"
-            "User-Agent" = "PowerShell-Script"
-        }
-
-        try {
-            $response = Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody
-            Write-Output "GitHub repo created successfully: $($response.full_name)"
-        } catch {
-            Write-Output "ERROR: Failed to create GitHub repo: $repoName. Skipping this repo."
-            Write-Output $_
-            continue
-        }
-
-        # ========== Block 5: Clone TFVC Repository ==========
-
-        if ($repoType -eq "TFVC") {
-            Write-Output "`nBLOCK 5: Cloning TFVC Repo from TFS: $tfvcPath"
-
-            if (Test-Path $localRepoPath) {
-                Write-Output "Removing existing local directory: $localRepoPath"
-                Remove-Item -Recurse -Force -Path $localRepoPath
+          $project = "${{ github.event.inputs.project_name }}"
+          $repo = "${{ github.event.inputs.repository_name }}"
+          $json = @(
+            @{
+              ProjectName = $project
+              Repositories = @(
+                @{
+                  RepositoryName = $repo
+                  RepositoryType = "TFVC"
+                }
+              )
             }
+          ) | ConvertTo-Json -Depth 4
+          $json | Out-File -FilePath "./repo-migration/input.json" -Encoding UTF8
+          Write-Output "Generated JSON:"
+          Write-Output $json
 
-            Write-Output "Executing: git tfs clone --username user --password *** $TfsUrl $tfvcPath $localRepoPath"
-            & git tfs clone --username "user" --password "$TfsToken" "$TfsUrl" "$tfvcPath" "$localRepoPath"
-
-            if ($LASTEXITCODE -ne 0) {
-                Write-Output "ERROR: git-tfs clone failed for $repoName. Skipping push."
-                continue
-            }
-
-            Write-Output "TFVC repository cloned to: $localRepoPath"
-
-            # ========== Block 6: Push to GitHub ==========
-
-            Write-Output "`nBLOCK 6: Pushing Repo to GitHub"
-            Set-Location -Path $localRepoPath
-
-            git remote add origin "https://$GitHubToken@github.com/$GitHubOrg/$repoName.git"
-            git push origin --all
-            git push origin --tags
-
-            Set-Location -Path $workingDir
-            Write-Output "Repository pushed successfully to GitHub: $repoName"
-
-            # ========== Block 7: Cleanup ==========
-
-            Write-Output "`nBLOCK 7: Cleaning Up Local Repo Directory"
-            Remove-Item -Recurse -Force -Path $localRepoPath
-            Write-Output "Local repo directory removed: $localRepoPath"
-        } elseif ($repoType -eq "GIT") {
-            Write-Output "Git repository migration not implemented yet for $repoName"
-        } else {
-            Write-Output "ERROR: Unknown repo type '$repoType' for $repoName"
-        }
-
-        Write-Output "--- Completed migration for: $repoName ---"
-    }
-
-    Write-Output "=== Completed project: $projectName ==="
-}
-
-# ========== Block 8: Final Output ==========
-
-Write-Output "`n=== BLOCK 8: Migration Completed for All Projects ==="
-
-
-
-
+      - name: Execute migration script
+        shell: powershell
+        run: |
+          $env:TFS_PAT = "${{ secrets.TFS_PAT }}"
+          $env:GITHUB_PAT = "${{ secrets.GH_PAT }}"
+          ./repo-migration/tfvc-to-github.ps1 -InputFile "./repo-migration/input.json"

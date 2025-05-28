@@ -1,84 +1,11 @@
-name: WorkFlow Dispatch
-
-on:
-  workflow_dispatch:
-    inputs:
-      project_name:
-        description: "Select the TFS Project"
-        required: true
-        type: choice
-        options:
-          - Healthcare-xRX
-          - Healthcare-HZD_DEFINEDCARE
-          # Add more project names here
-
-      repository_name:
-        description: "Select the Repository"
-        required: true
-        type: choice
-        options:
-          - $/Healthcare-xRX        
-          - $/Healthcare-xRX/BuildProcessTemplates
-          - $/Healthcare-xRX/Cigna.Pharmacy.ErrorList
-          - $/Healthcare-xRX/Cigna.Pharmacy.GetImagebyUrl
-          - $/Healthcare-xRX/Cigna.Pharmacy.MailRx-ImageViewer
-          - $/Healthcare-xRX/Cigna.Pharmacy.SRxBatchReportExtracts
-          - $/Healthcare-xRX/Cigna.Pharmacy.xRx.ImageService
-          - $/Healthcare-xRX/Cigna.Pharmacy.xRx.Web
-          - $/Healthcare-xRX/Development
-          - $/Healthcare-xRX/Main
-          - $/Healthcare-xRX/Prod_Fix
-          - $/Healthcare-xRX/Release
-          - $/Healthcare-xRX/Source
-          - $/Healthcare-HZD_DEFINEDCARE
-          - $/Healthcare-HZD_DEFINEDCARE/BuildProcessTemplates
-          - $/Healthcare-HZD_DEFINEDCARE/Development
-          - $/Healthcare-HZD_DEFINEDCARE/Main
-          - $/Healthcare-HZD_DEFINEDCARE/Release
-          # Add more as needed
-
-jobs:
-  migrate-tfvc:    
-    runs-on:
-      group: TFS-Migration-Runner
-
-    steps:    
-      - name: Disable SSL verification
-        run: git config --global http.sslVerify false
-
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Set up environment variables
-        shell: powershell
-        run: |
-          $env:TFS_PAT = "${{ secrets.TFS_PAT }}"
-          $env:GITHUB_PAT = "${{ secrets.GH_PAT }}"
-          [System.Environment]::SetEnvironmentVariable("GIT_TFS_PAT", $env:TFS_PAT, [System.EnvironmentVariableTarget]::User)
-
-      - name: Generate input JSON file
-        shell: powershell
-        run: |
-          $project = "${{ github.event.inputs.project_name }}"
-          $repo = "${{ github.event.inputs.repository_name }}"
-          $json = @(
-            @{
-              ProjectName = $project
-              Repositories = @(
-                @{
-                  RepositoryName = $repo
-                  RepositoryType = "TFVC"
-                }
-              )
-            }
-          ) | ConvertTo-Json -Depth 4
-          $json | Out-File -FilePath "./repo-migration/input.json" -Encoding UTF8
-          Write-Output "Generated JSON:"
-          Write-Output $json
-
-      - name: Execute migration script
-        shell: powershell
-        run: |
-          $env:TFS_PAT = "${{ secrets.TFS_PAT }}"
-          $env:GITHUB_PAT = "${{ secrets.GH_PAT }}"
-          ./repo-migration/tfvc-to-github.ps1 -InputFile "./repo-migration/input.json"
+Run $env:TFS_PAT = "***"
+  
+E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\repo-migration\tfvc-to-github.ps1 : A parameter cannot 
+be found that matches parameter name 'InputFile'.
+At E:\actions-runner-org-level\_work\_temp\c2cae618-82df-42fc-9ddf-8d03a2667b1c.ps1:4 char:37
++ ./repo-migration/tfvc-to-github.ps1 -InputFile "./repo-migration/inpu ...
++                                     ~~~~~~~~~~
+    + CategoryInfo          : InvalidArgument: (:) [tfvc-to-github.ps1], ParentContainsErrorRecordException
+    + FullyQualifiedErrorId : NamedParameterNotFound,tfvc-to-github.ps1
+ 
+Error: Process completed with exit code 1.

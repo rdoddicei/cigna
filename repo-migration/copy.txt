@@ -1,17 +1,1 @@
-Run $env:TFS_PAT = "***"
-  
-===  Reading Tokens and Setting Up Directories ===
-Creating working directory at E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\repo
-=== Reading Input JSON File ===
-Loaded JSON with  project(s).
-===  Processing Project: IM-ClientVertical-CAP_WEB_ENABLE ===
---- Processing Repository: IM-ClientVertical-CAP_WEB_ENABLE (Type: GIT) ---
- Creating GitHub Repository: IM-ClientVertical-CAP_WEB_ENABLE
-GitHub repo created successfully: cigna-group-infrastructure-services/IM-ClientVertical-CAP_WEB_ENABLE
- Cloning Git Repo from TFS: $/IM-ClientVertical-CAP_WEB_ENABLE
-Executing: git clone ***tfs.sys.cigna.com/tfs/DefaultCollection/$/IM-ClientVertical-CAP_WEB_ENABLE
-Cloning into 'E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\repo\IM-ClientVertical-CAP_WEB_ENABLE'...
-fatal: Authentication failed for 'https://tfs.sys.cigna.com/tfs/DefaultCollection/$/IM-ClientVertical-CAP_WEB_ENABLE/'
-ERROR: Git clone failed for IM-ClientVertical-CAP_WEB_ENABLE. Skipping push.
-=== Completed project: IM-ClientVertical-CAP_WEB_ENABLE ===
-===  Migration Completed  ===
+https://tfs.sys.cigna.com/tfs/DefaultCollection/$/Healthcare-CLMCCE/Cigna.CoreOps.VBS.CLMCEE.Router/'

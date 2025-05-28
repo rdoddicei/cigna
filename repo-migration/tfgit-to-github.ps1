@@ -1,92 +1,132 @@
-# Required tokens
-$tfsPat = "*******" # Replace with your TFS PAT
-$githubPat = "*************" # Replace with your GitHub PAT
+param(
+    [Parameter(Mandatory = $true)] [string]$TfsUrl,
+    [Parameter(Mandatory = $true)] [string]$GitHubOrg,
+    [Parameter(Mandatory = $true)] [string]$JsonFilePath
+)
 
-# Settings
-$organization = "https://tfs.sys.cigna.com/tfs/DefaultCollection"
-$destinationorganization = "cigna-group"
-$ProjectListJsonPath = "C:\Users\C9F9HC\Migration\cigna-tfs-to-github\projectRepoDetailsTFS2017.json" # Update the PATH
-$logPath = "C:\Users\C9F9HC\Migration\cigna-tfs-to-github\conversionlog.txt" # Path to log file
-$downloadedReposFolder = "C:\git-repos"
+# ==========  Read Tokens and Setup ==========
 
-# Ensure repo folder exists
-if (-not (Test-Path -Path $downloadedReposFolder)) {
-    New-Item -ItemType Directory -Path $downloadedReposFolder | Out-Null
+Write-Output "`n===  Reading Tokens and Setting Up Directories ==="
+
+$TfsToken = "----"
+$GitHubToken = "---"
+
+if (-not $TfsToken) { throw "Missing TFS_TOKEN in environment variables." }
+if (-not $GitHubToken) { throw "Missing GITHUB_TOKEN in environment variables." }
+
+$workingDir = Join-Path -Path $PWD -ChildPath "repo"
+if (-not (Test-Path $workingDir)) {
+    Write-Output "Creating working directory at $workingDir"
+    New-Item -ItemType Directory -Path $workingDir | Out-Null
+} else {
+    Write-Output "Working directory already exists at $workingDir"
 }
 
-# Validate JSON file
-if (-not (Test-Path $ProjectListJsonPath)) {
-    Write-Host "JSON file not found at: $ProjectListJsonPath" -ForegroundColor Red
-    exit 1
+# ========== Read JSON Input ==========
+
+Write-Output "`n=== Reading Input JSON File ==="
+
+if (-not (Test-Path $JsonFilePath)) {
+    throw "JSON input file not found: $JsonFilePath"
 }
 
-# Load JSON
-$projectData = Get-Content -Raw $ProjectListJsonPath | ConvertFrom-Json
+$jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
+Write-Output "Loaded JSON with $($jsonContent.Count) project(s)."
 
-# Process each project
-foreach ($proj in $projectData) {
-    if (-not $proj.ProjectName) {
-        Write-Host "Skipping invalid project entry." | Tee-Object -Append -FilePath $logPath
-        continue
-    }
+# ==========  Process Each Project and Repository ==========
 
-    $projectName = $proj.ProjectName.Trim()
-    Write-Host "Processing project: $projectName" | Tee-Object -Append -FilePath $logPath
+foreach ($project in $jsonContent) {
+    $projectName = $project.ProjectName
+    $repositories = $project.Repositories
 
-    foreach ($repo in $proj.Repositories) {
-        if ($repo.RepositoryType -ne "Git") {
-            Write-Host "Skipping non-Git repository: $($repo.RepositoryName)" | Tee-Object -Append -FilePath $logPath
-            continue
-        }
+    Write-Output "`n===  Processing Project: $projectName ==="
 
-        $gitRepoUrl = $repo.RepositoryUrl
-        if (-not $gitRepoUrl) {
-            $gitRepoUrl = "$organization/$projectName/_git/$($repo.RepositoryName)"
-        }
+    foreach ($repo in $repositories) {
+        $repoPath = $repo.RepositoryName
+        $repoName = ($repoPath -split '/')[ -1 ]
+        $repoType = $repo.RepositoryType.ToUpper()
+        $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
 
-        $repoName = ($gitRepoUrl -split '/')[-1].ToLower() -replace '[^\w\-]', '-'
-        $repoPath = Join-Path $downloadedReposFolder $repoName
+        Write-Output "`n--- Processing Repository: $repoName (Type: $repoType) ---"
 
-        # GitHub API call
-        $createRepoUrl = "https://api.github.com/orgs/$destinationorganization/repos"
+        # ==========  Create GitHub Repo ==========
+
+        Write-Output "`n Creating GitHub Repository: $repoName"
+        $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
         $repoBody = @{
-            name        = $repoName
-            visibility  = "internal"
-            description = "Migrated from TFS Git: $gitRepoUrl"
+            name = $repoName
+            visibility = "internal"
+            auto_init = $false
         } | ConvertTo-Json -Depth 3
 
         $headers = @{
-            Authorization  = "token $githubPat"
-            "User-Agent"   = "MigrationScript"
-            Accept         = "application/vnd.github+json"
+            Authorization = "token $GitHubToken"
+            Accept = "application/vnd.github.v3+json"
+            "User-Agent" = "PowerShell-Script"
         }
 
         try {
-            Write-Host "Creating GitHub repo: $repoName" | Tee-Object -Append -FilePath $logPath
-            Invoke-RestMethod -Uri $createRepoUrl -Method Post -Headers $headers -Body $repoBody
+            $response = Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody
+            Write-Output "GitHub repo created successfully: $($response.full_name)"
         } catch {
-            Write-Host "Failed to create GitHub repo: $repoName" | Tee-Object -Append -FilePath $logPath
+            Write-Output "ERROR: Failed to create GitHub repo: $repoName. Skipping this repo."
+            Write-Output $_
             continue
         }
 
-        # Clone from TFS using PAT
-        $encodedTfsUrl = $gitRepoUrl -replace "^https://", "https://$tfsPat@"
-        $maskedTfsUrl = $encodedTfsUrl -replace $tfsPat, '***'
-        Write-Host "Cloning from TFS URL: $maskedTfsUrl" | Tee-Object -Append -FilePath $logPath
+        if ($repoType -eq "GIT") {
+            # ==========  Clone Git Repo from TFS  ==========
 
-        git -c http.sslVerify=true clone --mirror $encodedTfsUrl $repoPath
+            Write-Output "`n Cloning Git Repo from TFS: $repoPath"
 
-        if (-not (Test-Path $repoPath)) {
-            Write-Host "Clone failed: $repoName" | Tee-Object -Append -FilePath $logPath
-            continue
+            if (Test-Path $localRepoPath) {
+                Write-Output "Removing existing local directory: $localRepoPath"
+                Remove-Item -Recurse -Force -Path $localRepoPath
+            }
+
+            $tfsGitRepoUrl = "$TfsUrl/$repoPath"
+            $secureTfsToken = [System.Web.HttpUtility]::UrlEncode($TfsToken)
+
+            $cloneUrl = $tfsGitRepoUrl -replace "^https://", "https://user:$secureTfsToken@"
+            Write-Output "Executing: git clone $cloneUrl"
+
+            git -c http.sslVerify=false clone $cloneUrl $localRepoPath
+        
+            if ($LASTEXITCODE -ne 0) {
+                Write-Output "ERROR: Git clone failed for $repoName. Skipping push."
+                continue
+            }
+
+            # ==========  Push to GitHub ==========
+
+            Write-Output "`n Pushing Repo to GitHub"
+            Set-Location -Path $localRepoPath
+
+            git remote add origin "https://$GitHubToken@github.com/$GitHubOrg/$repoName.git"
+            git push origin --all
+            git push origin --tags
+
+            Set-Location -Path $workingDir
+            Write-Output "Repository pushed successfully to GitHub: $repoName"
+
+            # ==========  Cleanup ==========
+
+            Write-Output "`n Cleaning Up Local Repo Directory"
+            Remove-Item -Recurse -Force -Path $localRepoPath
+            Write-Output "Local repo directory removed: $localRepoPath"
+
+        } elseif ($repoType -eq "TFVC") {
+            Write-Output "TFVC repository migration not implemented in this version."
+        } else {
+            Write-Output "ERROR: Unknown repo type '$repoType' for $repoName"
         }
 
-        # Push to GitHub
-        Set-Location $repoPath
-        git remote set-url origin "https://$githubPat@github.com/$destinationorganization/$repoName.git"
-        git push --mirror
-        Set-Location $downloadedReposFolder
+        Write-Output "--- Completed migration for: $repoName ---"
     }
+
+    Write-Output "=== Completed project: $projectName ==="
 }
 
-Write-Host "Migration complete." | Tee-Object -Append -FilePath $logPath
+# ========== Final Output ==========
+
+Write-Output "`n===  Migration Completed  ==="

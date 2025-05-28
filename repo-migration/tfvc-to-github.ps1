@@ -2,14 +2,15 @@ param(
     [Parameter(Mandatory = $true)] [string]$TfsUrl,
     [Parameter(Mandatory = $true)] [string]$GitHubOrg,
     [Parameter(Mandatory = $true)] [string]$JsonFilePath
+    
 )
 
 # ==========  Read Tokens and Setup ==========
 
 Write-Output "`n===  Reading Tokens and Setting Up Directories ==="
 
-$TfsToken = "----"       # Replace with your actual PAT or set from environment
-$GitHubToken = "---"     # Replace with your actual PAT or set from environment
+$TfsToken = "----"
+$GitHubToken = "---"
 
 if (-not $TfsToken) { throw "Missing TFS_TOKEN in environment variables." }
 if (-not $GitHubToken) { throw "Missing GITHUB_TOKEN in environment variables." }
@@ -45,6 +46,7 @@ foreach ($project in $jsonContent) {
         $repoPath = $repo.RepositoryName
         $repoName = ($repoPath -split '/')[ -1 ]
         $repoType = $repo.RepositoryType.ToUpper()
+        $tfvcPath = $repoPath
         $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
 
         Write-Output "`n--- Processing Repository: $repoName (Type: $repoType) ---"
@@ -74,27 +76,26 @@ foreach ($project in $jsonContent) {
             continue
         }
 
-        if ($repoType -eq "GIT") {
-            # ==========  Clone Git Repo from TFS  ==========
+        # ==========  Clone TFVC Repository ==========
 
-            Write-Output "`n Cloning Git Repo from TFS: $repoPath"
+        if ($repoType -eq "TFVC") {
+            Write-Output "`n Cloning TFVC Repo from TFS: $tfvcPath"
 
             if (Test-Path $localRepoPath) {
                 Write-Output "Removing existing local directory: $localRepoPath"
                 Remove-Item -Recurse -Force -Path $localRepoPath
             }
 
-            $tfsGitRepoUrl = "$TfsUrl/$repoPath"
-            $secureTfsToken = [System.Web.HttpUtility]::UrlEncode($TfsToken)
+            $cloneCmd = "git tfs clone --username user --password *** $TfsUrl $tfvcPath $localRepoPath"
+            Write-Output "Executing: $cloneCmd"
 
-            $cloneUrl = $tfsGitRepoUrl -replace "^https://", "https://user:$secureTfsToken@"
-            Write-Output "Executing: git clone $cloneUrl"
-
-            git clone $cloneUrl $localRepoPath
+            & git tfs clone --username user --password $TfsToken $TfsUrl $tfvcPath $localRepoPath
             if ($LASTEXITCODE -ne 0) {
-                Write-Output "ERROR: Git clone failed for $repoName. Skipping push."
+                Write-Output "ERROR: git-tfs clone failed for $repoName. Skipping push."
                 continue
             }
+
+            Write-Output "TFVC repository cloned to: $localRepoPath"
 
             # ==========  Push to GitHub ==========
 
@@ -113,9 +114,8 @@ foreach ($project in $jsonContent) {
             Write-Output "`n Cleaning Up Local Repo Directory"
             Remove-Item -Recurse -Force -Path $localRepoPath
             Write-Output "Local repo directory removed: $localRepoPath"
-
-        } elseif ($repoType -eq "TFVC") {
-            Write-Output "TFVC repository migration not implemented in this version."
+        } elseif ($repoType -eq "GIT") {
+            Write-Output "Git repository migration not implemented yet for $repoName"
         } else {
             Write-Output "ERROR: Unknown repo type '$repoType' for $repoName"
         }

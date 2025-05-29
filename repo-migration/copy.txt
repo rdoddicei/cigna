@@ -1,7 +1,11 @@
-When migrating TFS GIT repositories to github, we are getting an error as authentication failed for the tfs git url. I assume this is due to the tfs server is 2017 which by dafault doesn't support PAT authentications. 
+When migrating the tfs git repositories we are getting the error as authorizzation failed. 
 
-So I tried configuring the credentials to the runner machine via github --global credentials and it's strange that even my username and passwords are not working the the browser. 
+But the same script works well in local. 
 
-So I would kindly request your inputs or thoughts, so that I can proceed accordingly
+The difference here is that in local, when cloning it asks for the user inputs on the credentials for accessing git repositories. We have used 
 
+git config --global credential.helper store
 
+command to store the credentials (this is an one time activity) so that the credentials are stored in the git config to retrieve automatically without any need of user inputs. 
+
+So what I would suggest is to execute this command on the runner machine and try cloning a repo to input the credentials store, so that automatically from the workflow it will read the credentials from the global config insted of the user prompts so that the authentication will succeed. 

@@ -9,7 +9,7 @@ param(
 
 Write-Output "`n===  Reading Tokens and Setting Up Directories ==="
 
-$TfsToken = "----"
+$TfsToken = "---a"
 $GitHubToken = "---"
 
 if (-not $TfsToken) { throw "Missing TFS_TOKEN in environment variables." }

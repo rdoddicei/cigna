@@ -1,3 +1,1 @@
-it looks like Git is silently prompting for authentication or credential approval, which causes the script to hang in a non-interactive environment (like our runner/CI agent). This seems to be due to Git trying to use an interactive credential helper (e.g., Git Credential Manager) or waiting for a user prompt that never appears.
-
-Since the same script works fine when run manually, the problem appears to be tied specifically to how Git handles authentication in headless environments.
+https://username:password@hostname

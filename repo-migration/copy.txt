@@ -1,11 +1,3 @@
-When migrating the tfs git repositories we are getting the error as authorizzation failed. 
+it looks like Git is silently prompting for authentication or credential approval, which causes the script to hang in a non-interactive environment (like our runner/CI agent). This seems to be due to Git trying to use an interactive credential helper (e.g., Git Credential Manager) or waiting for a user prompt that never appears.
 
-But the same script works well in local. 
-
-The difference here is that in local, when cloning it asks for the user inputs on the credentials for accessing git repositories. We have used 
-
-git config --global credential.helper store
-
-command to store the credentials (this is an one time activity) so that the credentials are stored in the git config to retrieve automatically without any need of user inputs. 
-
-So what I would suggest is to execute this command on the runner machine and try cloning a repo to input the credentials store, so that automatically from the workflow it will read the credentials from the global config insted of the user prompts so that the authentication will succeed. 
+Since the same script works fine when run manually, the problem appears to be tied specifically to how Git handles authentication in headless environments.

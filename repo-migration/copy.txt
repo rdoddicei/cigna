@@ -24,3 +24,15 @@ ERROR: git-tfs clone failed for Cigna.SUW.MHParityTool. Skipping push.
 
 ===  Migration Completed  ===
 Error: Process completed with exit code 1.
+
+
+
+---config--
+
+[credential "https://tfs.sys.cigna.com"]
+    provider = generic
+[http]
+    sslVerify = false
+[credential]
+    helper = store --file C:/Users/SVP_TFS_AGENT/.git-credentials
+    interactive = never

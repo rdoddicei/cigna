@@ -1,38 +1,4 @@
-=== Reading Input JSON File ===
-Loaded JSON with  project(s).
-
-===  Processing Project: Healthcare-MHParityTool ===
-
---- Processing Repository: Cigna.SUW.MHParityTool (Type: TFVC) ---
-
- Creating GitHub Repository: Cigna.SUW.MHParityTool
-GitHub repo created successfully: cigna-group-infrastructure-services/Cigna.SUW.MHParityTool
-
- Cloning TFVC Repo from TFS: $/Healthcare-MHParityTool/Cigna.SUW.MHParityTool
-Executing: git tfs clone --username user --password *** https://tfs.sys.cigna.com/tfs/DefaultCollection $/Healthcare-MHParityTool/Cigna.SUW.MHParityTool E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\repo\Cigna.SUW.MHParityTool
-Found matching Visual Studio version at E:\Program Files\Microsoft Visual Studio\2022\Professional
-Initialized empty Git repository in E:/actions-runner-org-level/_work/tfs-migration/tfs-migration/repo/Cigna.SUW.MHParityTool/.git/
-
-Git-tfs requires that the user data in git config should be set. Please configure them before using git-tfs
-Actual config: 
- * user name: <not set>
- * user email: <not set>
-For help on how to set user git config, see https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
-All the logs could be found in the log file: C:\Users\SVP_TFS_AGENT\AppData\Local\git-tfs\git-tfs_log.txt
-ERROR: git-tfs clone failed for Cigna.SUW.MHParityTool. Skipping push.
-=== Completed project: Healthcare-MHParityTool ===
-
-===  Migration Completed  ===
-Error: Process completed with exit code 1.
-
-
-
----config--
-
-[credential "https://tfs.sys.cigna.com"]
-    provider = generic
-[http]
-    sslVerify = false
-[credential]
-    helper = store --file C:/Users/SVP_TFS_AGENT/.git-credentials
-    interactive = never
+- name: Set Git user config
+  run: |
+    git config --local user.name "TFS Migrator"
+    git config --local user.email "tfs-migrator@yourdomain.com"

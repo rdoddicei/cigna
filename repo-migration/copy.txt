@@ -1,4 +1,23 @@
-- name: Set Git user config
-  run: |
-    git config --local user.name "TFS Migrator"
-    git config --local user.email "tfs-migrator@yourdomain.com"
+  
+=== Reading Tokens and Setting Up Directories ===
+Creating working directory at E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\repo
+=== Reading Input JSON File ===
+Loaded JSON with  project(s).
+=== Processing Project: Healthcare-Top60eProMacro ===
+--- Processing Repository: Healthcare-Top60eProMacro (Type: TFVC) ---
+Creating GitHub Repository: Healthcare-Top60eProMacro
+GitHub repo created successfully: cigna-group/Healthcare-Top60eProMacro
+Cloning TFVC Repo from TFS: $/Healthcare-Top60eProMacro
+Executing: git tfs clone --username patuser --password *** https://tfs.sys.cigna.com/tfs/DefaultCollection $/Healthcare-Top60eProMacro E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\repo\Healthcare-Top60eProMacro
+Found matching Visual Studio version at E:\Program Files\Microsoft Visual Studio\2022\Professional
+Initialized empty Git repository in E:/actions-runner-org-level/_work/tfs-migration/tfs-migration/repo/Healthcare-Top60eProMacro/.git/
+Git-tfs requires that the user data in git config should be set. Please configure them before using git-tfs
+Actual config: 
+ * user name: <not set>
+ * user email: <not set>
+For help on how to set user git config, see https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
+All the logs could be found in the log file: C:\Users\SVP_TFS_AGENT\AppData\Local\git-tfs\git-tfs_log.txt
+ERROR: git-tfs clone failed for Healthcare-Top60eProMacro. Skipping push.
+=== Completed project: Healthcare-Top60eProMacro ===
+=== Migration Completed ===
+Error: Process completed with exit code 1.

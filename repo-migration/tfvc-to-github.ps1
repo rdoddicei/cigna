@@ -80,21 +80,37 @@ foreach ($project in $jsonContent) {
                 Remove-Item -Recurse -Force -Path $localRepoPath
             }
 
+            # ----- TEMP GIT CONFIG -----
+            $tempGitConfigDir = Join-Path $env:TEMP "temp_gitconfig_$repoName"
+            $gitConfigFile = Join-Path $tempGitConfigDir "gitconfig"
+
+            if (-not (Test-Path $tempGitConfigDir)) {
+                New-Item -ItemType Directory -Path $tempGitConfigDir | Out-Null
+            }
+
+            git config --file $gitConfigFile user.name "tfs-import-bot"
+            git config --file $gitConfigFile user.email "tfs-import-bot@example.com"
+            $env:GIT_CONFIG_GLOBAL = $gitConfigFile
+
+            Write-Output "Temporary Git config created and GIT_CONFIG_GLOBAL set."
+
+            # ----- GIT TFS CLONE -----
             $cloneCmd = "git tfs clone --username patuser --password *** $TfsUrl $tfvcPath $localRepoPath"
             Write-Output "Executing: $cloneCmd"
 
             & git tfs clone --username "patuser" --password $TfsToken $TfsUrl $tfvcPath $localRepoPath
+
+            # Cleanup temp git config
+            $env:GIT_CONFIG_GLOBAL = $null
+            Remove-Item -Force -Path $gitConfigFile -ErrorAction SilentlyContinue
+            Remove-Item -Recurse -Force -Path $tempGitConfigDir -ErrorAction SilentlyContinue
+
             if ($LASTEXITCODE -ne 0) {
                 Write-Output "ERROR: git-tfs clone failed for $repoName. Skipping push."
                 continue
             }
 
             Write-Output "TFVC repository cloned to: $localRepoPath"
-
-            # ========== Set Local Git Config ==========
-            git -C $localRepoPath config user.name "tfs-import-bot"
-            git -C $localRepoPath config user.email "tfs-import-bot@example.com"
-            Write-Output "Git config user.name and user.email set locally."
 
             # ========== Push to GitHub ==========
             Write-Output "`nPushing Repo to GitHub"

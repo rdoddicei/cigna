@@ -4,7 +4,7 @@ param(
     [Parameter(Mandatory = $true)] [string]$JsonFilePath
 )
 
-# ==========  Read Tokens and Setup ==========
+# ========== Read Tokens and Setup ==========
 
 Write-Output "`n=== Reading Tokens and Setting Up Directories ==="
 
@@ -32,6 +32,12 @@ if (-not (Test-Path $JsonFilePath)) {
 
 $jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
 Write-Output "Loaded JSON with $($jsonContent.Count) project(s)."
+
+# ========== Git Config for Non-Interactive ==========
+
+git config --global credential.helper ""
+git config --global core.askpass "echo"
+$env:GIT_TERMINAL_PROMPT = 0
 
 # ========== Process Each Project and Repository ==========
 
@@ -84,20 +90,29 @@ foreach ($project in $jsonContent) {
                 Remove-Item -Recurse -Force -Path $localRepoPath
             }
 
-            $tfsGitRepoUrl = "$TfsUrl/$repoPath"
             $encodedTfsToken = [System.Web.HttpUtility]::UrlEncode($TfsToken)
+            $secureCloneUrl = $TfsUrl -replace "^https://", "https://user:$encodedTfsToken@"
+            $secureCloneUrl = "$secureCloneUrl/$repoPath"
 
-            # Disable Git credential helper
-            git config --global credential.helper ""
+            Write-Output "Running Git clone with timeout..."
+            $cloneProcess = Start-Process -FilePath "git" `
+              -ArgumentList "-c", "http.sslVerify=false", "clone", "$secureCloneUrl", "$localRepoPath" `
+              -NoNewWindow -PassThru
 
-            # Construct secure TFS clone URL
-            $secureCloneUrl = $tfsGitRepoUrl -replace "^https://", "https://user:$encodedTfsToken@"
+            $maxWaitSeconds = 60
+            $elapsed = 0
+            while (-not $cloneProcess.HasExited -and $elapsed -lt $maxWaitSeconds) {
+                Start-Sleep -Seconds 5
+                $elapsed += 5
+            }
 
-            Write-Output "Executing: git -c http.sslVerify=false clone $secureCloneUrl"
+            if (-not $cloneProcess.HasExited) {
+                Write-Output "Clone still running after $maxWaitSeconds seconds. Force stopping."
+                Stop-Process -Id $cloneProcess.Id -Force
+                throw "Git clone process hung. Terminated after timeout."
+            }
 
-            git -c http.sslVerify=false clone $secureCloneUrl $localRepoPath
-
-            if ($LASTEXITCODE -ne 0) {
+            if ($cloneProcess.ExitCode -ne 0) {
                 Write-Output "ERROR: Git clone failed for $repoName. Skipping push."
                 continue
             }

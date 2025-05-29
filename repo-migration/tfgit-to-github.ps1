@@ -5,27 +5,25 @@ param(
 )
 
 # Set tokens
-$TfsToken = "---"
-$GitHubToken = "---"
+$TfsToken = "---"      # If needed for TFS authentication
+$GitHubToken = "---"   # GitHub PAT with repo scope
 
 if (-not $TfsToken) { throw "Missing TFS_TOKEN in script." }
 if (-not $GitHubToken) { throw "Missing GITHUB_TOKEN in script." }
-
-# Create working directory
-$workingDir = Join-Path -Path $PWD -ChildPath "repo"
-if (-not (Test-Path $workingDir)) {
-    New-Item -ItemType Directory -Path $workingDir | Out-Null
-}
 
 # Load input JSON
 if (-not (Test-Path $JsonFilePath)) {
     throw "JSON input file not found: $JsonFilePath"
 }
-
 $jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
 Write-Output "Loaded $($jsonContent.Count) project(s) from input JSON"
 
-# Process each project and its repositories
+$headers = @{
+    Authorization = "token $GitHubToken"
+    Accept = "application/vnd.github.v3+json"
+    "User-Agent" = "PowerShell-MigrationScript"
+}
+
 foreach ($project in $jsonContent) {
     $projectName = $project.ProjectName
     $repositories = $project.Repositories
@@ -49,7 +47,6 @@ foreach ($project in $jsonContent) {
         $repoSubPath = ($pathParts | Select-Object -Skip 1) -join '/'
         $tfsGitUrl = "$TfsUrl/$projectPart/_git/$repoSubPath"
 
-        $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
         Write-Output "`nProcessing Repository: $repoName (Type: $repoType)"
 
         # Create GitHub repository
@@ -60,12 +57,6 @@ foreach ($project in $jsonContent) {
             auto_init = $false
         } | ConvertTo-Json -Depth 3
 
-        $headers = @{
-            Authorization = "token $GitHubToken"
-            Accept = "application/vnd.github.v3+json"
-            "User-Agent" = "PowerShell-MigrationScript"
-        }
-
         try {
             $response = Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody
             Write-Output "GitHub repo created: $($response.full_name)"
@@ -75,67 +66,68 @@ foreach ($project in $jsonContent) {
         }
 
         if ($repoType -eq "GIT") {
-            if (Test-Path $localRepoPath) {
-                Remove-Item -Recurse -Force -Path $localRepoPath
+            # Prepare Import API URL
+            $importUri = "https://api.github.com/repos/$GitHubOrg/$repoName/import"
+
+            # If your TFS requires token in URL for import, insert it here; else leave URL as is.
+            $importVcsUrl = $tfsGitUrl
+            if ($TfsToken) {
+                # Insert token in URL as basic auth (only if TFS supports it)
+                $uriParts = [uri]$tfsGitUrl
+                $importVcsUrl = "$($uriParts.Scheme)://$($TfsToken)@$($uriParts.Host)$($uriParts.AbsolutePath)"
             }
 
-            Write-Output "Cloning from TFS: $tfsGitUrl"
-
-            $secureCloneUrl = $tfsGitUrl -replace "^https://", "https://$TfsToken@"
-            $maskedCloneUrl = $secureCloneUrl -replace $TfsToken, '***'
-            Write-Output "Cloning from TFS URL: $maskedCloneUrl"
+            $importBody = @{
+                vcs = "git"
+                vcs_url = $importVcsUrl
+                # Optional credentials if needed:
+                # vcs_username = "username"
+                # vcs_password = "password_or_token"
+            } | ConvertTo-Json
 
             try {
-                Write-Output "Running Git clone with timeout..."
-                $cloneProcess = Start-Process -FilePath "git" `
-                    -ArgumentList "-c", "http.sslVerify=false", "clone", "--mirror", "$secureCloneUrl", "$localRepoPath" `
-                    -NoNewWindow -PassThru
-
-                $timeout = 80  # seconds
-                $elapsed = 0
-                $checkInterval = 5  # seconds
-
-                while (-not $cloneProcess.HasExited -and $elapsed -lt $timeout) {
-                    Start-Sleep -Seconds $checkInterval
-                    $elapsed += $checkInterval
-                }
-
-                if (-not $cloneProcess.HasExited) {
-                    Write-Output "Clone still running after $timeout seconds. Force stopping."
-                    Stop-Process -Id $cloneProcess.Id -Force
-                    throw "Git clone process hung. Terminated after timeout."
-                }
-
-                if ($cloneProcess.ExitCode -ne 0 -or -not (Test-Path $localRepoPath)) {
-                    Write-Output "Git clone failed with exit code $($cloneProcess.ExitCode). Skipping $repoName"
-                    continue
-                }
+                # Start import
+                $startImportResponse = Invoke-RestMethod -Uri $importUri -Method Put -Headers $headers -Body $importBody
+                Write-Output "Started import for $repoName"
             } catch {
-                Write-Output "Git clone failed for $repoName - $_"
+                Write-Output "Failed to start import for $repoName - $_"
                 continue
             }
 
-            Write-Output "Pushing to GitHub: $repoName"
-            try {
-                Set-Location -Path $localRepoPath
+            # Poll import status up to 80 seconds
+            $timeout = 80
+            $elapsed = 0
+            $pollInterval = 5
 
-                git remote remove origin -ErrorAction SilentlyContinue
-                git remote add origin "https://x-access-token:$GitHubToken@github.com/$GitHubOrg/$repoName.git"
+            while ($elapsed -lt $timeout) {
+                Start-Sleep -Seconds $pollInterval
+                $elapsed += $pollInterval
 
-                git push --mirror
-            } catch {
-                Write-Output "Push to GitHub failed for $repoName - $_"
-                continue
-            } finally {
-                Set-Location -Path $workingDir
-                if (Test-Path $localRepoPath) {
-                    Remove-Item -Recurse -Force -Path $localRepoPath
-                    Write-Output "Cleaned local repo: $repoName"
+                try {
+                    $statusResponse = Invoke-RestMethod -Uri $importUri -Method Get -Headers $headers
+                    $importStatus = $statusResponse.status
+                    Write-Output "Import status for $repoName: $importStatus"
+
+                    if ($importStatus -eq "complete") {
+                        Write-Output "Import completed successfully for $repoName"
+                        break
+                    }
+                    elseif ($importStatus -eq "error") {
+                        Write-Output "Import failed for $repoName. Message: $($statusResponse.errors | ConvertTo-Json)"
+                        break
+                    }
+                } catch {
+                    Write-Output "Failed to get import status for $repoName - $_"
+                    break
                 }
+            }
+
+            if ($elapsed -ge $timeout) {
+                Write-Output "Import timed out after $timeout seconds for $repoName"
             }
 
         } elseif ($repoType -eq "TFVC") {
-            Write-Output "Skipping TFVC repo: $repoName - Not supported"
+            Write-Output "Skipping TFVC repo: $repoName - Not supported by GitHub Import API"
         } else {
             Write-Output "Unknown repo type: $repoType"
         }

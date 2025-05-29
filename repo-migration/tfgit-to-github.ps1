@@ -4,60 +4,55 @@ param(
     [Parameter(Mandatory = $true)] [string]$JsonFilePath
 )
 
-# ========== Read Tokens and Setup ==========
-
-Write-Output "`n=== Reading Tokens and Setting Up Directories ==="
-
-$TfsToken = "YOUR_TFS_PAT"
-$GitHubToken = "YOUR_GITHUB_PAT"
+# Set tokens
+$TfsToken = "---"
+$GitHubToken = "---"
 
 if (-not $TfsToken) { throw "Missing TFS_TOKEN in script." }
 if (-not $GitHubToken) { throw "Missing GITHUB_TOKEN in script." }
 
+# Create working directory
 $workingDir = Join-Path -Path $PWD -ChildPath "repo"
 if (-not (Test-Path $workingDir)) {
-    Write-Output "Creating working directory at $workingDir"
     New-Item -ItemType Directory -Path $workingDir | Out-Null
-} else {
-    Write-Output "Working directory already exists at $workingDir"
 }
 
-# ========== Read JSON Input ==========
-
-Write-Output "`n=== Reading Input JSON File ==="
-
+# Load input JSON
 if (-not (Test-Path $JsonFilePath)) {
     throw "JSON input file not found: $JsonFilePath"
 }
 
 $jsonContent = Get-Content -Raw -Path $JsonFilePath | ConvertFrom-Json
-Write-Output "Loaded JSON with $($jsonContent.Count) project(s)."
+Write-Output "Loaded $($jsonContent.Count) project(s) from input JSON"
 
-# ========== Git Config for Non-Interactive ==========
-
-git config --global credential.helper ""
-git config --global core.askpass "echo"
-$env:GIT_TERMINAL_PROMPT = 0
-
-# ========== Process Each Project and Repository ==========
-
+# Process each project and its repositories
 foreach ($project in $jsonContent) {
     $projectName = $project.ProjectName
     $repositories = $project.Repositories
 
-    Write-Output "`n=== Processing Project: $projectName ==="
+    Write-Output "`nProcessing Project: $projectName"
 
     foreach ($repo in $repositories) {
         $repoPath = $repo.RepositoryName
-        $repoName = ($repoPath -split '/')[ -1 ]
         $repoType = $repo.RepositoryType.ToUpper()
+
+        $cleanRepoPath = $repoPath -replace "^\$/", ""
+        $pathParts = $cleanRepoPath -split '/'
+
+        if ($pathParts.Length -lt 2) {
+            Write-Output "Invalid repo path format: $repoPath"
+            continue
+        }
+
+        $projectPart = $pathParts[0]
+        $repoName = ($pathParts[-1])
+        $repoSubPath = ($pathParts | Select-Object -Skip 1) -join '/'
+        $tfsGitUrl = "$TfsUrl/$projectPart/_git/$repoSubPath"
+
         $localRepoPath = Join-Path -Path $workingDir -ChildPath $repoName
+        Write-Output "`nProcessing Repository: $repoName (Type: $repoType)"
 
-        Write-Output "`n--- Processing Repository: $repoName (Type: $repoType) ---"
-
-        # ========== Create GitHub Repo ==========
-
-        Write-Output "`n Creating GitHub Repository: $repoName"
+        # Create GitHub repository
         $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
         $repoBody = @{
             name = $repoName
@@ -68,84 +63,68 @@ foreach ($project in $jsonContent) {
         $headers = @{
             Authorization = "token $GitHubToken"
             Accept = "application/vnd.github.v3+json"
-            "User-Agent" = "PowerShell-Script"
+            "User-Agent" = "PowerShell-MigrationScript"
         }
 
         try {
             $response = Invoke-RestMethod -Uri $createRepoUri -Method Post -Headers $headers -Body $repoBody
-            Write-Output "GitHub repo created successfully: $($response.full_name)"
+            Write-Output "GitHub repo created: $($response.full_name)"
         } catch {
-            Write-Output "ERROR: Failed to create GitHub repo: $repoName. Skipping this repo."
-            Write-Output $_
+            Write-Output "Skipping repo: $repoName - GitHub repo may already exist or failed to create"
             continue
         }
 
         if ($repoType -eq "GIT") {
-            # ========== Clone Git Repo from TFS ==========
-
-            Write-Output "`n Cloning Git Repo from TFS: $repoPath"
-
             if (Test-Path $localRepoPath) {
-                Write-Output "Removing existing local directory: $localRepoPath"
                 Remove-Item -Recurse -Force -Path $localRepoPath
             }
 
-            $encodedTfsToken = [System.Web.HttpUtility]::UrlEncode($TfsToken)
-            $secureCloneUrl = $TfsUrl -replace "^https://", "https://user:$encodedTfsToken@"
-            $secureCloneUrl = "$secureCloneUrl/$repoPath"
+            Write-Output "Cloning from TFS: $tfsGitUrl"
 
-            Write-Output "Running Git clone with timeout..."
-            $cloneProcess = Start-Process -FilePath "git" `
-              -ArgumentList "-c", "http.sslVerify=false", "clone", "$secureCloneUrl", "$localRepoPath" `
-              -NoNewWindow -PassThru
+            # Use the same logic as tfgit-to-github.ps1 for authentication
+            $secureCloneUrl = $tfsGitUrl -replace "^https://", "https://$TfsToken@"
+            $maskedCloneUrl = $secureCloneUrl -replace $TfsToken, '***'
+            Write-Output "Cloning from TFS URL: $maskedCloneUrl"
 
-            $maxWaitSeconds = 60
-            $elapsed = 0
-            while (-not $cloneProcess.HasExited -and $elapsed -lt $maxWaitSeconds) {
-                Start-Sleep -Seconds 5
-                $elapsed += 5
-            }
-
-            if (-not $cloneProcess.HasExited) {
-                Write-Output "Clone still running after $maxWaitSeconds seconds. Force stopping."
-                Stop-Process -Id $cloneProcess.Id -Force
-                throw "Git clone process hung. Terminated after timeout."
-            }
-
-            if ($cloneProcess.ExitCode -ne 0) {
-                Write-Output "ERROR: Git clone failed for $repoName. Skipping push."
+            try {
+                git -c http.sslVerify=false clone --mirror $secureCloneUrl $localRepoPath
+            } catch {
+                Write-Output "Git clone failed for $repoName - $_"
                 continue
             }
 
-            # ========== Push to GitHub ==========
+            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $localRepoPath)) {
+                Write-Output "Git clone failed. Skipping $repoName"
+                continue
+            }
 
-            Write-Output "`n Pushing Repo to GitHub"
-            Set-Location -Path $localRepoPath
+            Write-Output "Pushing to GitHub: $repoName"
+            try {
+                Set-Location -Path $localRepoPath
 
-            git remote add origin "https://$GitHubToken@github.com/$GitHubOrg/$repoName.git"
-            git push origin --all
-            git push origin --tags
+                git remote remove origin -ErrorAction SilentlyContinue
+                git remote add origin "https://x-access-token:$GitHubToken@github.com/$GitHubOrg/$repoName.git"
 
-            Set-Location -Path $workingDir
-            Write-Output "Repository pushed successfully to GitHub: $repoName"
-
-            # ========== Cleanup ==========
-
-            Write-Output "`n Cleaning Up Local Repo Directory"
-            Remove-Item -Recurse -Force -Path $localRepoPath
-            Write-Output "Local repo directory removed: $localRepoPath"
+                git push --mirror
+            } catch {
+                Write-Output "Push to GitHub failed for $repoName - $_"
+                continue
+            } finally {
+                Set-Location -Path $workingDir
+                Remove-Item -Recurse -Force -Path $localRepoPath
+                Write-Output "Cleaned local repo: $repoName"
+            }
 
         } elseif ($repoType -eq "TFVC") {
-            Write-Output "TFVC repository migration not implemented in this version."
+            Write-Output "Skipping TFVC repo: $repoName - Not supported"
         } else {
-            Write-Output "ERROR: Unknown repo type '$repoType' for $repoName"
+            Write-Output "Unknown repo type: $repoType"
         }
 
-        Write-Output "--- Completed migration for: $repoName ---"
+        Write-Output "Done: $repoName"
     }
 
-    Write-Output "=== Completed project: $projectName ==="
+    Write-Output "`nCompleted Project: $projectName"
 }
 
-# ========== Final Output ==========
-Write-Output "`n=== Migration Completed ==="
+Write-Output "`nAll repositories processed."

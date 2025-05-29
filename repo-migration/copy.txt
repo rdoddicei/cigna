@@ -1,69 +1,23 @@
-param (
-    [string]$TfsCollectionUrl = "https://tfs.sys.cigna.com/tfs/DefaultCollection",
-    [string]$GitHubOrg = "cigna-group",
-    [string]$GitHubToken,
-    [string]$TfsPatToken,
-    [string]$MigrationJsonPath = "./input.json"
-)
-
-$ErrorActionPreference = "Stop"
-$WorkingDir = "$PSScriptRoot/repo"
-New-Item -ItemType Directory -Force -Path $WorkingDir | Out-Null
-
-# 1. Create a custom .gitconfig for git-tfs
-$customGitConfigPath = "$PSScriptRoot/tfvc_gitconfig"
-@"
-[user]
-    name = TFS Migration Bot
-    email = tfs-migration@yourcompany.com
-"@ | Set-Content -Path $customGitConfigPath -Encoding UTF8
-
-# 2. Set GIT_CONFIG_GLOBAL for this session
-$env:GIT_CONFIG_GLOBAL = $customGitConfigPath
-
-# 3. Read input JSON
-Write-Output "=== Reading Input JSON File ==="
-$json = Get-Content $MigrationJsonPath | ConvertFrom-Json
-
-foreach ($project in $json.projects) {
-    Write-Output "=== Processing Project: $($project.name) ==="
-
-    foreach ($repo in $project.repositories) {
-        $repoName = $repo.name
-        $repoType = $repo.type
-
-        Write-Output "--- Processing Repository: $repoName (Type: $repoType) ---"
-        $repoDir = "$WorkingDir\$repoName"
-
-        if ($repoType -eq "TFVC") {
-            # 4. Create GitHub repo via API (skip if already exists)
-            $createRepoUrl = "https://api.github.com/orgs/$GitHubOrg/repos"
-            $repoPayload = @{
-                name = $repoName
-                private = $true
-            } | ConvertTo-Json -Depth 2
-
-            $createResponse = Invoke-RestMethod -Method POST -Uri $createRepoUrl -Headers @{
-                Authorization = "Bearer $GitHubToken"
-                Accept = "application/vnd.github+json"
-            } -Body $repoPayload -ContentType "application/json" -ErrorAction SilentlyContinue
-
-            Write-Output "GitHub repo created (or already exists): $GitHubOrg/$repoName"
-
-            # 5. Clone TFVC repo with git-tfs
-            $tfvcPath = "$/$($project.name)"
-            $cloneCmd = "git tfs clone --username patuser --password $TfsPatToken $TfsCollectionUrl $tfvcPath `"$repoDir`""
-            Write-Output "Executing: $cloneCmd"
-            Invoke-Expression $cloneCmd
-
-            # 6. Push to GitHub
-            Set-Location -Path $repoDir
-            git remote add origin "https://github.com/$GitHubOrg/$repoName.git"
-            git push --set-upstream origin master
-        }
-    }
-}
-
-# 7. Clean up
-Remove-Item Env:\GIT_CONFIG_GLOBAL
-Write-Output "=== Migration Completed ==="
+  
+=== Reading Tokens and Setting Up Directories ===
+Creating working directory at E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\repo
+=== Reading Input JSON File ===
+Loaded JSON with  project(s).
+=== Processing Project: Healthcare-MHParityTool ===
+--- Processing Repository: BenefitExtractor (Type: TFVC) ---
+Creating GitHub Repository: BenefitExtractor
+GitHub repo created successfully: cigna-group/BenefitExtractor
+Cloning TFVC Repo from TFS: $/Healthcare-MHParityTool/BenefitExtractor
+Temporary Git config created and GIT_CONFIG_GLOBAL set.
+Executing: git tfs clone --username patuser --password *** https://tfs.sys.cigna.com/tfs/DefaultCollection $/Healthcare-MHParityTool/BenefitExtractor E:\actions-runner-org-level\_work\tfs-migration\tfs-migration\repo\BenefitExtractor
+Found matching Visual Studio version at E:\Program Files\Microsoft Visual Studio\2022\Professional
+Initialized empty Git repository in E:/actions-runner-org-level/_work/tfs-migration/tfs-migration/repo/BenefitExtractor/.git/
+Git-tfs requires that the user data in git config should be set. Please configure them before using git-tfs
+Actual config: 
+ * user name: <not set>
+ * user email: <not set>
+For help on how to set user git config, see https://git-scm.com/book/en/v2/Getting-Started-First-Time-Git-Setup
+All the logs could be found in the log file: C:\Users\SVP_TFS_AGENT\AppData\Local\git-tfs\git-tfs_log.txt
+ERROR: git-tfs clone failed for BenefitExtractor. Skipping push.
+=== Completed project: Healthcare-MHParityTool ===
+=== Migration Completed ===

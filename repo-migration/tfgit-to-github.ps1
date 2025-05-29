@@ -81,20 +81,37 @@ foreach ($project in $jsonContent) {
 
             Write-Output "Cloning from TFS: $tfsGitUrl"
 
-            # Use the same logic as tfgit-to-github.ps1 for authentication
             $secureCloneUrl = $tfsGitUrl -replace "^https://", "https://$TfsToken@"
             $maskedCloneUrl = $secureCloneUrl -replace $TfsToken, '***'
             Write-Output "Cloning from TFS URL: $maskedCloneUrl"
 
             try {
-                git -c http.sslVerify=false clone --mirror $secureCloneUrl $localRepoPath
+                Write-Output "Running Git clone with timeout..."
+                $cloneProcess = Start-Process -FilePath "git" `
+                    -ArgumentList "-c", "http.sslVerify=false", "clone", "--mirror", "$secureCloneUrl", "$localRepoPath" `
+                    -NoNewWindow -PassThru
+
+                $timeout = 80  # seconds
+                $elapsed = 0
+                $checkInterval = 5  # seconds
+
+                while (-not $cloneProcess.HasExited -and $elapsed -lt $timeout) {
+                    Start-Sleep -Seconds $checkInterval
+                    $elapsed += $checkInterval
+                }
+
+                if (-not $cloneProcess.HasExited) {
+                    Write-Output "Clone still running after $timeout seconds. Force stopping."
+                    Stop-Process -Id $cloneProcess.Id -Force
+                    throw "Git clone process hung. Terminated after timeout."
+                }
+
+                if ($cloneProcess.ExitCode -ne 0 -or -not (Test-Path $localRepoPath)) {
+                    Write-Output "Git clone failed with exit code $($cloneProcess.ExitCode). Skipping $repoName"
+                    continue
+                }
             } catch {
                 Write-Output "Git clone failed for $repoName - $_"
-                continue
-            }
-
-            if ($LASTEXITCODE -ne 0 -or -not (Test-Path $localRepoPath)) {
-                Write-Output "Git clone failed. Skipping $repoName"
                 continue
             }
 
@@ -111,8 +128,10 @@ foreach ($project in $jsonContent) {
                 continue
             } finally {
                 Set-Location -Path $workingDir
-                Remove-Item -Recurse -Force -Path $localRepoPath
-                Write-Output "Cleaned local repo: $repoName"
+                if (Test-Path $localRepoPath) {
+                    Remove-Item -Recurse -Force -Path $localRepoPath
+                    Write-Output "Cleaned local repo: $repoName"
+                }
             }
 
         } elseif ($repoType -eq "TFVC") {

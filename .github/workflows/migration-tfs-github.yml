@@ -8,8 +8,13 @@ on:
         required: true
         type: choice
         options:
-          - Healthcare-xRX
-          - Healthcare-HZD_DEFINEDCARE
+          - Enterprise-Shared
+          - Healthcare-Top60eProMacro
+          - Healthcare-MHParityTool
+          - Healthcare-CCS_ELIGIBILITY_ACE
+          - Healthcare-LCRS
+          - Healthcare-BCA_DenAdmin
+          - Healthcare-CSB_App_New_Business
           # Add more project names here
 
       repository_name:
@@ -17,24 +22,32 @@ on:
         required: true
         type: choice
         options:
-          - $/Healthcare-xRX        
-          - $/Healthcare-xRX/BuildProcessTemplates
-          - $/Healthcare-xRX/Cigna.Pharmacy.ErrorList
-          - $/Healthcare-xRX/Cigna.Pharmacy.GetImagebyUrl
-          - $/Healthcare-xRX/Cigna.Pharmacy.MailRx-ImageViewer
-          - $/Healthcare-xRX/Cigna.Pharmacy.SRxBatchReportExtracts
-          - $/Healthcare-xRX/Cigna.Pharmacy.xRx.ImageService
-          - $/Healthcare-xRX/Cigna.Pharmacy.xRx.Web
-          - $/Healthcare-xRX/Development
-          - $/Healthcare-xRX/Main
-          - $/Healthcare-xRX/Prod_Fix
-          - $/Healthcare-xRX/Release
-          - $/Healthcare-xRX/Source
-          - $/Healthcare-HZD_DEFINEDCARE
-          - $/Healthcare-HZD_DEFINEDCARE/BuildProcessTemplates
-          - $/Healthcare-HZD_DEFINEDCARE/Development
-          - $/Healthcare-HZD_DEFINEDCARE/Main
-          - $/Healthcare-HZD_DEFINEDCARE/Release
+          - $/Enterprise-Shared        
+          - $/Enterprise-Shared/BuildProcessTemplates
+          - $/Enterprise-Shared/CustomAssemblies
+          - $/Enterprise-Shared/DeploymentsScripts
+          - $/Enterprise-Shared/RMBuildProcessTemplates
+          - $/Enterprise-Shared/WebDscModules
+          - $/Healthcare-Top60eProMacro
+          - $/Healthcare-Top60eProMacro/BuildProcessTemplates
+          - $/Healthcare-Top60eProMacro/Development
+          - $/Healthcare-Top60eProMacro/Main
+          - $/Healthcare-Top60eProMacro/Release
+          - $/Healthcare-MHParityTool
+          - $/Healthcare-MHParityTool/BenefitExtractor
+          - $/Healthcare-MHParityTool/Cigna.SUW.MHParityTool
+          - $/Healthcare-MHParityTool/Database
+          - $/Healthcare-CSB_App_New_Business
+          - $/Healthcare-CSB_App_New_Business/BuildProcessTemplates
+          - $/Healthcare-CSB_App_New_Business/Development
+          - $/Healthcare-CSB_App_New_Business/Healthcare-CSB_Framework
+          - $/Healthcare-CSB_App_New_Business/Main
+          - $/Healthcare-CSB_App_New_Business/Release
+          - $/Healthcare-LCRS
+          - $/Healthcare-LCRS/BuildProcessTemplates
+          - $/Healthcare-LCRS/Development
+          - $/Healthcare-LCRS/Main
+          - $/Healthcare-LCRS/Release        
           # Add more as needed
 
 jobs:
@@ -43,6 +56,7 @@ jobs:
       group: TFS-Migration-Runner
 
     steps:    
+    
       - name: Disable SSL verification
         run: git config --global http.sslVerify false
 
@@ -81,4 +95,4 @@ jobs:
         run: |
           $env:TFS_PAT = "${{ secrets.TFS_PAT }}"
           $env:GITHUB_PAT = "${{ secrets.GH_PAT }}"
-          ./repo-migration/tfvc-to-github.ps1 -JsonFilePath "./repo-migration/input.json" -TfsUrl "https://tfs.sys.cigna.com/tfs/DefaultCollection" -GitHubOrg "cigna-group-infrastructure-services"
+          ./repo-migration/tfvc-to-github.ps1 -JsonFilePath "./repo-migration/input.json" -TfsUrl "https://tfs.sys.cigna.com/tfs/DefaultCollection" -GitHubOrg "cigna-group"

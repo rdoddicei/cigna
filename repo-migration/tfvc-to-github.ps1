@@ -7,8 +7,8 @@ param(
 # ========== Tokens ==========
 Write-Output "`n=== Reading Tokens and Setting Up Directories ==="
 
-$TfsToken = "---"
-$GitHubToken = "---"
+$TfsToken = "---"  # Replace with real PAT
+$GitHubToken = "---"  # Replace with real PAT
 
 if (-not $TfsToken) { throw "Missing TFS_TOKEN." }
 if (-not $GitHubToken) { throw "Missing GITHUB_TOKEN." }
@@ -39,34 +39,27 @@ foreach ($project in $jsonContent) {
     Write-Output "`n=== Processing Project: $projectName ==="
 
     foreach ($repo in $repositories) {
-        $repoPath = $repo.RepositoryName
+        $rawRepoPath = $repo.RepositoryName
         $repoType = $repo.RepositoryType.ToUpper()
 
-        # Determine GitHub repository name
-        $cleanRepoPath = $repoPath -replace "^\$/", ""
+        # === Clean and normalize repo path ===
+        $cleanRepoPath = $rawRepoPath -replace "^\$/", ""  # Remove $/ prefix
         $pathParts = $cleanRepoPath -split '/'
 
-        if ($pathParts.Length -eq 1) {
-            # Handle case where repo path is the same as project name
-            $repoName = $pathParts[0]
-        } elseif ($pathParts.Length -ge 2) {
-            $repoName = $pathParts[-1]
-        } else {
-            Write-Output "Invalid repo path format: $repoPath"
+        # === Determine GitHub repository name ===
+        if ($pathParts.Length -eq 0 -or [string]::IsNullOrWhiteSpace($pathParts[-1])) {
+            Write-Output "Invalid repo path format: $rawRepoPath"
             continue
         }
 
-        if ($projectName -eq $repoName) {
-            $githubRepoName = $projectName
-        } else {
-            $githubRepoName = "$projectName-$repoName"
-        }
+        $repoName = $pathParts[-1]
+        $githubRepoName = if ($projectName -eq $repoName) { $projectName } else { "$projectName-$repoName" }
 
         $localRepoPath = Join-Path -Path $workingDir -ChildPath $githubRepoName
 
         Write-Output "`n--- Processing Repository: $githubRepoName (Type: $repoType) ---"
 
-        # ========== Create GitHub Repo ==========
+        # === Create GitHub Repository ===
         Write-Output "`nCreating GitHub Repository: $githubRepoName"
         $createRepoUri = "https://api.github.com/orgs/$GitHubOrg/repos"
         $repoBody = @{
@@ -90,20 +83,20 @@ foreach ($project in $jsonContent) {
             continue
         }
 
-        # ========== Clone TFVC Repository ==========
+        # === Clone TFVC Repository ===
         if ($repoType -eq "TFVC") {
-            Write-Output "`nCloning TFVC Repo from TFS: $repoPath"
+            Write-Output "`nCloning TFVC Repo from TFS: $rawRepoPath"
 
             if (Test-Path $localRepoPath) {
                 Write-Output "Removing existing local directory: $localRepoPath"
                 Remove-Item -Recurse -Force -Path $localRepoPath
             }
 
-            # --- Create temp home directory with .gitconfig for git-tfs user config ---
+            # Create temp home directory for git-tfs config
             $tempHome = Join-Path $env:TEMP "git-tfs-temp-home-$([guid]::NewGuid())"
             New-Item -ItemType Directory -Path $tempHome | Out-Null
-
             $tempGitConfigPath = Join-Path $tempHome ".gitconfig"
+
             @"
 [user]
     name = tfs-import-bot
@@ -112,21 +105,14 @@ foreach ($project in $jsonContent) {
 
             $oldUserProfile = $env:USERPROFILE
             $env:USERPROFILE = $tempHome
-
             Write-Output "Temporary USERPROFILE set to $tempHome"
 
-            # --- Run git tfs clone ---
-            $cloneCmd = "git tfs clone --username patuser --password *** $TfsUrl $repoPath $localRepoPath"
+            $cloneCmd = "git tfs clone --username patuser --password *** $TfsUrl $rawRepoPath $localRepoPath"
             Write-Output "Executing: $cloneCmd"
-
-            & git tfs clone --username "patuser" --password $TfsToken $TfsUrl $repoPath $localRepoPath
-
+            & git tfs clone --username "patuser" --password $TfsToken $TfsUrl $rawRepoPath $localRepoPath
             $cloneExitCode = $LASTEXITCODE
 
-            # --- Reset USERPROFILE ---
             $env:USERPROFILE = $oldUserProfile
-
-            # --- Cleanup temp home ---
             Remove-Item -Recurse -Force -Path $tempHome
 
             if ($cloneExitCode -ne 0) {
@@ -136,15 +122,12 @@ foreach ($project in $jsonContent) {
 
             Write-Output "TFVC repository cloned to: $localRepoPath"
 
-            # ========== Set Local Git Config ==========
+            # === Git Config and Push ===
             git -C $localRepoPath config user.name "tfs-import-bot"
             git -C $localRepoPath config user.email "tfs-import-bot@example.com"
-            Write-Output "Git config user.name and user.email set locally."
 
-            # ========== Push to GitHub ==========
             Write-Output "`nPushing Repo to GitHub"
             Set-Location -Path $localRepoPath
-
             git remote add origin "https://$GitHubToken@github.com/$GitHubOrg/$githubRepoName.git"
             git push origin --all
             git push origin --tags
@@ -152,10 +135,9 @@ foreach ($project in $jsonContent) {
             Set-Location -Path $workingDir
             Write-Output "Repository pushed successfully to GitHub: $githubRepoName"
 
-            # ========== Cleanup ==========
+            # === Cleanup ===
             Write-Output "`nCleaning Up Local Repo Directory"
             Remove-Item -Recurse -Force -Path $localRepoPath
-            Write-Output "Local repo directory removed: $localRepoPath"
         }
         elseif ($repoType -eq "GIT") {
             Write-Output "Git repository migration not implemented yet for $githubRepoName"

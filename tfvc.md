@@ -1,120 +1,48 @@
 
-# Workflow Documentation: TFVC Repository Migration
+# Migrating TFGIT Repository to GitHub
 
-This document provides a comprehensive overview of the **migration-tfs-github.yml** GitHub Actions workflow, along with detailed execution steps and an explanation of the associated PowerShell script (**tfvc-to-github.ps1**).
+When migrating a TFGIT repository from a TFS server to GitHub, follow these steps to ensure a smooth and successful migration:
 
----
+✅ **Select the correct project and repository:**
 
-## Workflow Name: TFVC Repository migration with User Input
+- In the **Select the TFS Project** dropdown, choose the name of the TFS project you want to migrate.
+- In the **Select the Repository** dropdown, choose the specific repository (or source branch) you want to migrate.
 
-## Trigger
+✅ **Trigger the workflow:**
 
-The workflow is triggered manually using the **workflow_dispatch** event. It takes user inputs for:
-- **Project Name**: Select the TFS project.
-- **Repository Name**: Select the TFVC repository within that project.
-
-## Job: migrate-tfvc
-
-This job runs on a self-hosted runner group called **TFS-Migration-Runner** and consists of the following steps:
-
-### 🔧 Steps
-
-1️⃣ **Disable SSL Verification**  
-Disables Git SSL verification globally to bypass any SSL-related issues during migration.(not recommanded the proper SSL needs to be updated in the runner so that we can repove this step)
-
-2️⃣ **Checkout Code**  
-Uses the **actions/checkout@v4** action to pull the workflow and migration scripts.
-
-3️⃣ **Set Up Environment Variables**  
-- Loads TFS and GitHub PATs from GitHub Secrets.
-- Sets them as environment variables for the migration process.
-
-4️⃣ **Generate Input JSON File**  
-- Uses PowerShell to create a JSON file (`input.json`) containing the selected project and repository.
-- This file is used by the migration script to identify which repository to migrate.
-
-5️⃣ **Execute Migration Script**  
-- Runs the **tfvc-to-github.ps1** PowerShell script.
-- Passes the JSON file path, TFS URL, and GitHub organization as parameters.
+- After selecting the project and repository, click on **Run workflow** to start the migration process.
+- The workflow will use your provided selections to prepare the environment and execute the migration script automatically.
 
 ---
 
-## Execution Steps
+**TFGIT Project in TFS (Before Migration):**  
+*(insert screenshot here)*
 
-To run this workflow:
+**After Migration:**  
+*(insert screenshot here)*
 
-1️⃣ Navigate to the **Actions** tab in your GitHub repository.  
-2️⃣ Select the **TFVC Repository migration with User Input** workflow.  
-3️⃣ Click on **Run workflow**.  
-4️⃣ Choose the desired **Project Name** and **Repository Name** from the dropdowns.  
-5️⃣ Click **Run workflow** to trigger the migration.
-
-The workflow will execute the defined steps, creating a JSON input file and invoking the PowerShell script to complete the migration.
-
----
-
-## PowerShell Script: tfvc-to-github.ps1
-
-This PowerShell script (`tfvc-to-github.ps1`) is responsible for performing the actual migration from TFS to GitHub. Here’s an explanation of its main components:
-
-### ✏️ Key Functions
-
-- **Input Parsing**:  
-  The script reads the `input.json` file to get the **Project Name** and **Repository Name** for migration.
-
-- **Authentication**:  
-  Uses the environment variables (`TFS_PAT` and `GITHUB_PAT`) to authenticate with TFS and GitHub.
-
-- **Migration Execution**:  
-  The script typically runs commands like `git-tfs clone` or similar migration tools to perform the migration.  
-  It ensures the TFVC repository history is cloned and pushed to the target GitHub repository.
-
-- **Error Handling**:  
-  Includes checks for migration status, logs any errors, and provides output to track progress.
-
-### 🚀 How to Use
-
-This script is automatically executed by the GitHub Actions workflow. However, you can also run it manually (for testing or debugging) using PowerShell:
-
-```powershell
-./repo-migration/tfvc-to-github.ps1 -JsonFilePath "./repo-migration/input.json" -TfsUrl "https://tfs.server.url" -GitHubOrg "github-org-name"
-```
-
-Replace the parameters as needed for your environment.
+**Note:**  
+The new GitHub repository will be created with the following naming convention:  
+**TFS project name** followed by the **repository name**.  
+This ensures that the migrated repository in GitHub maintains a clear link to its TFS source.
 
 ---
 
+## Validation After Migration
 
-# Migration Scenarios
+🔍 After the migration completes, it's crucial to validate the following:
 
-## Scenario 1: Project and Repository Names are the Same
+- **Commit History:**  
+  Check that all commits, branches, and tags have been migrated correctly and that the history in GitHub matches the original TFS repository.
 
-If you want to migrate the entire TFVC project to GitHub, select the same name in both the “Select the TFS Project” and “Select the Repository” dropdowns. This ensures the script treats the entire TFVC project as a single GitHub repository, creating a new GitHub repository with the same name. All the contents of the TFVC project will be placed in a subfolder within this new GitHub repository.
+- **File Structure:**  
+  Ensure that the directory structure, including folders and files, is consistent in the new GitHub repository.
 
-**Example:**
-![alt text](image-2.png)
-**TFVC project in TFS:**
-![alt text](image-3.png)
+- **Metadata:**  
+  Validate that metadata such as commit messages, authorship information, and timestamps are intact.
 
-**After migration to GitHub:**
-![alt text](image-4.png)
+- **Permissions:**  
+  Review repository permissions and branch protection rules in GitHub to ensure they align with your team’s security policies.
 
-**Note**: In these cases, the TFS Project name and the GitHub repository name will be identical.
-
-## Scenario 2: Project and Repository Names are Different
-
-Use Case: If you only want to migrate a specific folder or branch within a TFVC project to a separate repository in GitHub.
-
-In this case, choose the relevant project and repository names from the dropdowns and execute the workflow.
-
-**Example:**
-**Before Migration**
-![alt text](image-5.png)
-
-**After migration to GitHub:**
-![alt text](image-6.png)
-
-**Note:** The new GitHub repository will be named using the TFS Project name followed by the repository name you selected in the workflow.
-
-**Summary**: This documentation provides a complete guide to the TFVC to GitHub migration workflow, including step-by-step execution instructions and a high-level explanation of the PowerShell script used for migration.
-
+- **Pull Requests (if applicable):**  
+  If using a TFVC to Git migration (not TFVC direct), confirm that pull requests are either migrated or archived in the source system for reference.

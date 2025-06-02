@@ -84,5 +84,37 @@ Replace the parameters as needed for your environment.
 
 ---
 
+
+# Migration Scenarios
+
+## Scenario 1: Project and Repository Names are the Same
+
+If you want to migrate the entire TFVC project to GitHub, select the same name in both the “Select the TFS Project” and “Select the Repository” dropdowns. This ensures the script treats the entire TFVC project as a single GitHub repository, creating a new GitHub repository with the same name. All the contents of the TFVC project will be placed in a subfolder within this new GitHub repository.
+
+**Example:**
+![alt text](image-2.png)
+**TFVC project in TFS:**
+![alt text](image-3.png)
+
+**After migration to GitHub:**
+![alt text](image-4.png)
+
+**Note**: In these cases, the TFS Project name and the GitHub repository name will be identical.
+
+## Scenario 2: Project and Repository Names are Different
+
+Use Case: If you only want to migrate a specific folder or branch within a TFVC project to a separate repository in GitHub.
+
+In this case, choose the relevant project and repository names from the dropdowns and execute the workflow.
+
+**Example:**
+**Before Migration**
+![alt text](image-5.png)
+
+**After migration to GitHub:**
+![alt text](image-6.png)
+
+**Note:** The new GitHub repository will be named using the TFS Project name followed by the repository name you selected in the workflow.
+
 **Summary**: This documentation provides a complete guide to the TFVC to GitHub migration workflow, including step-by-step execution instructions and a high-level explanation of the PowerShell script used for migration.
 

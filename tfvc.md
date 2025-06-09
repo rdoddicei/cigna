@@ -142,3 +142,9 @@ This ensures that the migrated repository in GitHub maintains a clear link to it
 
 - **Pull Requests (if applicable):**  
   If using a TFVC to Git migration (rather than TFVC direct), confirm that pull requests are either migrated or archived in the source system for reference.
+
+
+  ## Usefull links
+  **Enable the long path behavior**
+  https://github.com/Azure/azure-powershell/wiki/Enable-the-long-path-behavior
+  **LFS**

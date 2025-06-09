@@ -143,6 +143,18 @@ This ensures that the migrated repository in GitHub maintains a clear link to it
 - **Pull Requests (if applicable):**  
   If using a TFVC to Git migration (rather than TFVC direct), confirm that pull requests are either migrated or archived in the source system for reference.
 
+## Incase of migration failure due to buffer size
+
+- **Migration Failure detection:**
+  If the migration is failed with the error as **error: unable to rewind rpc post data: try increasing the buffer size more than 500MB** please follow the steps below
+
+- Start by raising the postBuffer size by logging into the actions runner machine and execute the script
+
+
+  **git config --global http.postBuffer 1048576000**
+
+
+
 
   ## Usefull links
   **Enable the long path behavior**

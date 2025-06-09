@@ -151,7 +151,7 @@ This ensures that the migrated repository in GitHub maintains a clear link to it
 - Start by raising the postBuffer size by logging into the actions runner machine and execute the script
 
 
-  **git config --global http.postBuffer 1048576000**
+  **git config --global http.postBuffer 524288000**
 
 
 
@@ -159,7 +159,7 @@ This ensures that the migrated repository in GitHub maintains a clear link to it
   ## Usefull links
   **Enable the long path behavior**
   https://github.com/Azure/azure-powershell/wiki/Enable-the-long-path-behavior
-  **LFS**
+  
   **Migration Failure due to buffer size - Quick Fix**
   https://stackoverflow.com/questions/6842687/the-remote-end-hung-up-unexpectedly-while-git-cloning
 

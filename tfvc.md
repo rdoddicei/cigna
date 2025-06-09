@@ -160,3 +160,6 @@ This ensures that the migrated repository in GitHub maintains a clear link to it
   **Enable the long path behavior**
   https://github.com/Azure/azure-powershell/wiki/Enable-the-long-path-behavior
   **LFS**
+  **Migration Failure due to buffer size - Quick Fix**
+  https://stackoverflow.com/questions/6842687/the-remote-end-hung-up-unexpectedly-while-git-cloning
+
